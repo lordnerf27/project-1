@@ -4,36 +4,39 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>VibeCode Retro App</title>
+  <!-- Readable retro font -->
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
     /* ---------- Reset ---------- */
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; }
 
-    /* ---------- Sakura cream / sunset pink theme ---------- */
+    /* ---------- Sakura cream / sunset pink (lighter after curtains) ---------- */
     :root {
-      --bg-deep: #2f1f28;   /* deep plum background */
-      --bg-top:  #4b3040;   /* top gradient color */
-      --cream:   #eac6d3;   /* card fill */
-      --cream-2: #f7dfe8;   /* borders / accents */
-      --text:    #2a1a22;   /* text on cream */
-      --shadow:  rgba(0,0,0,0.22);
-      --accent:  #d69db3;   /* inner border accent */
+      --bg-top:  #fde6ef;  /* top gradient, very light pink */
+      --bg-deep: #f9d8e6;  /* bottom gradient, soft cream */
+      --cream:   #ffe9f1;  /* card / panels */
+      --cream-2: #fff6fa;  /* borders / accents */
+      --text:    #2a1a22;  /* deep plum text */
+      --shadow:  rgba(0,0,0,0.18);
+      --accent:  #d69db3;  /* inner border accent */
     }
 
     body {
       background: var(--bg-deep);
       display: grid; place-items: center;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-family: 'VT323', ui-monospace, monospace;
       color: var(--text);
+      letter-spacing: 0.3px;
     }
 
-    /* ---------- Frame ---------- */
+    /* ---------- Frame (larger) ---------- */
     .frame {
-      width: min(92vw, 720px);
+      width: min(98vw, 1280px);   /* much bigger */
       aspect-ratio: 16/9;
       border: 12px solid var(--cream-2);
       border-radius: 20px;
-      box-shadow: 0 16px 40px var(--shadow), inset 0 0 0 6px var(--accent);
+      box-shadow: 0 18px 50px var(--shadow), inset 0 0 0 6px var(--accent);
       position: relative;
       image-rendering: pixelated;
       overflow: hidden;
@@ -41,35 +44,38 @@
     }
 
     /* ---------- Layers ---------- */
-    .content { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; z-index: 9; }
+    .content { position: absolute; inset: 0; display: grid; place-items: center; padding: clamp(16px, 2vw, 32px); z-index: 9; }
     canvas#fx { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
 
     /* ---------- Welcome card (always top-most) ---------- */
     .card {
       background: var(--cream);
       border: 4px solid var(--cream-2);
-      border-radius: 12px;
-      padding: 20px 24px;
+      border-radius: 16px;
+      padding: clamp(20px, 3vw, 40px) clamp(24px, 3.2vw, 48px);
       text-align: center;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.18);
       position: relative;
-      z-index: 10;
+      z-index: 12; /* top-most */
     }
+    .card h1 { font-size: clamp(28px, 5vw, 64px); margin: 0 0 8px; }
+    .card p  { font-size: clamp(18px, 2.4vw, 32px); margin: 0 0 10px; }
 
     .btn {
       cursor: pointer;
       display: inline-block;
       margin-top: 12px;
-      padding: 10px 16px;
+      padding: clamp(10px, 1.6vw, 18px) clamp(18px, 2.6vw, 28px);
       border: 3px solid var(--cream-2);
       background: var(--cream-2);
       color: var(--text);
       font-weight: 700;
-      box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+      box-shadow: 0 4px 0 rgba(0,0,0,0.2);
       text-transform: uppercase;
       letter-spacing: 1px;
+      font-size: clamp(16px, 2.2vw, 28px);
     }
-    .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
 
     /* ---------- Draping curtains (simple) ---------- */
     .curtain {
@@ -78,54 +84,73 @@
       transition: transform 900ms ease;
       background:
         linear-gradient(180deg, rgba(255,255,255,0.25), rgba(0,0,0,0.05)),
-        repeating-linear-gradient(90deg, #f1c3d2 0 10px, #e4b0c5 10px 20px);
+        repeating-linear-gradient(90deg, #f8c7d8 0 12px, #efb7cb 12px 24px);
       box-shadow: inset 0 0 0 2px var(--accent);
     }
-    .curtain.left  { left: 0;  transform: translateX(0);  box-shadow: inset -8px 0 0 rgba(0,0,0,0.15); }
-    .curtain.right { right: 0; transform: translateX(0);  box-shadow: inset  8px 0 0 rgba(0,0,0,0.15); }
+    .curtain.left  { left: 0;  transform: translateX(0);  box-shadow: inset -10px 0 0 rgba(0,0,0,0.12); }
+    .curtain.right { right: 0; transform: translateX(0);  box-shadow: inset  10px 0 0 rgba(0,0,0,0.12); }
     .curtains-open .curtain.left  { transform: translateX(-100%); }
     .curtains-open .curtain.right { transform: translateX(100%); }
 
     /* ---------- Pixel characters (sprite slots) ---------- */
     .char {
-      position: absolute; bottom: 12px; width: 48px; height: 48px;
+      position: absolute; bottom: 18px; width: clamp(48px, 6vw, 88px); height: clamp(48px, 6vw, 88px);
       background: var(--cream-2);
       border: 4px solid var(--cream-2);
       box-shadow: 0 3px 0 rgba(0,0,0,0.2);
       z-index: 6;
       image-rendering: pixelated;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center bottom;
+      background-size: contain; background-repeat: no-repeat; background-position: center bottom;
     }
-    .char-left  { left: 10px;  background-image: url('assets/levi.png'); }
-    .char-right { right: 10px; background-image: url('assets/inosuke.png'); }
+    .char-left  { left: 14px;  background-image: url('assets/levi.png'); }
+    .char-right { right: 14px; background-image: url('assets/inosuke.png'); }
 
     @keyframes pull { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
     .pulling { animation: pull 600ms steps(3) infinite; }
 
     /* ---------- Choice screen ---------- */
-    .panel { width: 100%; max-width: 640px; }
+    .panel { width: 100%; max-width: 1040px; }
     h1, h2, p { margin: 0 0 8px 0; }
-    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+    .title { text-align: center; font-size: clamp(28px, 4.2vw, 64px); margin-top: clamp(6px, 1.2vw, 12px); }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(12px, 2vw, 24px); margin-top: clamp(12px, 2vw, 20px); }
     .option {
-      padding: 14px 12px;
+      padding: clamp(16px, 2.2vw, 28px) clamp(12px, 1.6vw, 18px);
       border: 3px solid var(--cream-2);
       background: var(--cream);
       color: var(--text);
       text-align: center; font-weight: 700; cursor: pointer;
-      box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+      box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+      font-size: clamp(18px, 2.4vw, 32px);
     }
-    .option:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
-    .msg { margin-top: 10px; min-height: 24px; opacity: 0.9; }
+    .option:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
 
-    /* ---------- Status bar ---------- */
+    /* We won't use the inline .msg area; routing messages to .status */
+    .msg { display:none; }
+
+    /* ---------- Status bar (bottom) ---------- */
     .status {
-      position: absolute; left: 8px; right: 8px; bottom: 8px;
-      padding: 6px 10px; background: rgba(0,0,0,0.25);
-      border: 2px solid var(--cream-2); border-radius: 8px; font-size: 12px; color: #fff;
+      position: absolute; left: 12px; right: 12px; bottom: 12px;
+      padding: clamp(8px, 1.2vw, 14px) clamp(10px, 1.6vw, 18px);
+      background: rgba(42, 26, 34, 0.66); /* deep plum overlay */
+      border: 2px solid var(--cream-2); border-radius: 10px; 
+      font-size: clamp(16px, 2.2vw, 24px); color: #fff; font-weight: 600;
       z-index: 8;
     }
+
+    /* ---------- Success dialog ---------- */
+    .dialog {
+      position: absolute; inset: 0; display: grid; place-items: center; z-index: 13; 
+    }
+    .dialog .box {
+      background: var(--cream);
+      border: 4px solid var(--cream-2); border-radius: 14px;
+      box-shadow: 0 10px 0 rgba(0,0,0,0.2);
+      padding: clamp(18px, 2.4vw, 32px) clamp(22px, 3vw, 44px);
+      text-align: center; max-width: 720px; width: 90%;
+    }
+    .dialog h3 { font-size: clamp(26px, 3.8vw, 48px); margin: 0 0 6px; }
+    .dialog p  { font-size: clamp(18px, 2.4vw, 28px); margin: 0; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -148,7 +173,7 @@
 
       <!-- Choice Screen (hidden initially) -->
       <div class="panel" id="choices" style="display:none">
-        <h2>Choose your university</h2>
+        <h2 class="title">Choose your destination!</h2>
         <div class="grid">
           <button class="option" data-key="A">NSU</button>
           <button class="option" data-key="B">IUB</button>
@@ -159,7 +184,16 @@
       </div>
     </div>
 
-    <div class="status" id="status">VibeCoding: sakura cream theme. Sounds on click.</div>
+    <!-- Status bar for messages -->
+    <div class="status" id="status">Press Start to begin.</div>
+
+    <!-- Success dialog -->
+    <div class="dialog hidden" id="congrats">
+      <div class="box">
+        <h3>Congratulations</h3>
+        <p>This is the first step to your dreams.</p>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -183,41 +217,67 @@
       return { beep, melody };
     })();
 
-    /* ---------- Fireworks ---------- */
-    const Fireworks = (() => {
+    /* ---------- FX: fireworks + confetti ---------- */
+    const FX = (() => {
       const c = document.getElementById('fx');
       const ctx = c.getContext('2d');
       let W,H, raf, particles=[];
       const rnd=(a,b)=>a+Math.random()*(b-a);
+      const colors = ['#ffecf7','#ffe3ef','#f9d8e6','#ffd1e8','#ffffff','#eac6d3','#f7dfe8'];
       const resize = () => { W = c.width = c.offsetWidth; H = c.height = c.offsetHeight; };
+
       const burst = (x,y,count=90) => {
         for(let i=0;i<count;i++){
           const ang=Math.random()*Math.PI*2, spd=rnd(1.2,3.4);
-          particles.push({ x, y, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, life: rnd(40,80), age:0 });
+          particles.push({ type:'spark', x, y, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, life:rnd(40,80), age:0, col:'#e979a8' });
         }
         if(!raf) loop();
       };
+
+      const confetti = (x,y,count=120,spread=Math.PI/3,up=true) => {
+        const base = up ? -Math.PI/2 : Math.PI/2;
+        for(let i=0;i<count;i++){
+          const ang = base + rnd(-spread, spread);
+          const spd = rnd(2.0, 5.0);
+          const size = rnd(2,4);
+          particles.push({ type:'confetti', x, y, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, rot:rnd(0,Math.PI*2), rs:rnd(-0.2,0.2), w:size, h:size*2, life:rnd(80,140), age:0, col: colors[(Math.random()*colors.length)|0] });
+        }
+        if(!raf) loop();
+      };
+
       const loop = () => {
         raf = requestAnimationFrame(loop);
         ctx.clearRect(0,0,W,H);
         for(let i=particles.length-1;i>=0;i--){
-          const p=particles[i]; p.age++; p.x+=p.vx; p.y+=p.vy; p.vy+=0.02;
-          const a=1-p.age/p.life; if(a<=0){ particles.splice(i,1); continue; }
-          ctx.globalAlpha=a; ctx.fillStyle='#fff5f8'; ctx.fillRect(p.x,p.y,3,3); ctx.globalAlpha=1;
+          const p=particles[i]; p.age++;
+          p.x+=p.vx; p.y+=p.vy; p.vy += 0.02; // gravity
+          const a = 1 - p.age/p.life; if(a<=0){ particles.splice(i,1); continue; }
+          ctx.globalAlpha = a;
+          if(p.type==='spark'){
+            ctx.fillStyle = '#e979a8';
+            ctx.fillRect(p.x,p.y,3,3);
+          } else { // confetti rectangles
+            ctx.save();
+            ctx.translate(p.x,p.y);
+            p.rot += p.rs; ctx.rotate(p.rot);
+            ctx.fillStyle = p.col; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+            ctx.restore();
+          }
+          ctx.globalAlpha = 1;
         }
         if(particles.length===0){ cancelAnimationFrame(raf); raf=null; }
       };
       window.addEventListener('resize', resize); resize();
-      return { burst };
+      return { burst, confetti };
     })();
 
     /* ---------- App state ---------- */
-    const frame   = document.getElementById('frame');
-    const startBtn= document.getElementById('startBtn');
-    const welcome = document.getElementById('welcome');
-    const choices = document.getElementById('choices');
-    const message = document.getElementById('message');
-    const status  = document.getElementById('status');
+    const frame    = document.getElementById('frame');
+    const startBtn = document.getElementById('startBtn');
+    const welcome  = document.getElementById('welcome');
+    const choices  = document.getElementById('choices');
+    const status   = document.getElementById('status');
+    const dialog   = document.getElementById('congrats');
 
     // Correct label & custom wrong messages
     const correctLabel = 'IUB';
@@ -234,14 +294,10 @@
       const labels = shuffle(['NSU','IUB','AIUB','BRAC']);
       const nodes = Array.from(document.querySelectorAll('.option'));
       labelByKey = {};
-      nodes.forEach((n,i)=>{
-        const key = keys[i], label = labels[i];
-        n.dataset.key = key; n.textContent = label; labelByKey[key]=label;
-      });
+      nodes.forEach((n,i)=>{ const key=keys[i], label=labels[i]; n.dataset.key=key; n.textContent=label; labelByKey[key]=label; });
       correctKey = keys.find(k => labelByKey[k] === correctLabel) || 'B';
       correctClickedOnce = false;
-      message.textContent = '';
-      status.textContent = 'Pick the correct university.';
+      status.textContent = 'Pick the correct destination.';
     }
 
     const openCurtains = () => {
@@ -262,26 +318,28 @@
         const key = btn.dataset.key;
         const label = labelByKey[key];
         if(label !== correctLabel){
-          message.textContent = incorrectMap[label] || 'Incorrect choice. This is not the university you chose.';
+          status.textContent = incorrectMap[label] || 'Incorrect choice. This is not the university you chose.';
           Audio.beep(160, 0.12, 'square', 0.18);
           return;
         }
         if(!correctClickedOnce){
           correctClickedOnce = true;
-          message.textContent = 'First attempt didn\'t work. Try again!';
-          status.textContent = 'Correct detected once. Choose it again to celebrate!';
+          status.textContent = "First attempt didn't work. Try again!";
           Audio.beep(360, 0.12);
           return;
         }
-        message.textContent = '🎉 YOUR BIGGEST STEP SO FAR';
-        status.textContent = 'Success! Fireworks triggered.';
+        // Success: fireworks + confetti + dialog, no status spam
+        FX.burst(btn.getBoundingClientRect().left - frame.getBoundingClientRect().left + btn.offsetWidth/2,
+                 btn.getBoundingClientRect().top - frame.getBoundingClientRect().top + btn.offsetHeight/2);
+        // two party poppers from bottom corners
+        const fr = frame.getBoundingClientRect();
+        FX.confetti(40, fr.height-60, 140, Math.PI/4, true);
+        FX.confetti(fr.width-40, fr.height-60, 140, Math.PI/4, true);
         Audio.melody();
-        const rect = btn.getBoundingClientRect(), frameRect = frame.getBoundingClientRect();
-        const x = rect.left - frameRect.left + rect.width/2;
-        const y = rect.top  - frameRect.top  + rect.height/2;
-        for(let i=0;i<5;i++) setTimeout(()=>Fireworks.burst(x, y), i*120);
+        dialog.classList.remove('hidden');
       });
     });
   </script>
 </body>
 </html>
+
