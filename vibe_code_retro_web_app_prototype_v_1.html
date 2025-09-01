@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VibeCode Retro App</title>
+  <style>
+    /* --- Reset --- */
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+
+    /* --- Game Boy palette + pixel look --- */
+    :root {
+      --gb-dark: #0f380f;   /* darkest green */
+      --gb-mid:  #306230;   /* mid green */
+      --gb-lite: #8bac0f;   /* light green */
+      --gb-pale: #9bbc0f;   /* pale green */
+      --shadow: rgba(0,0,0,0.25);
+    }
+    body {
+      background: var(--gb-dark);
+      display: grid; place-items: center;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: var(--gb-pale);
+    }
+    .frame {
+      width: min(92vw, 720px);
+      aspect-ratio: 16/9;
+      border: 12px solid var(--gb-lite);
+      border-radius: 20px;
+      box-shadow: 0 16px 40px var(--shadow), inset 0 0 0 6px var(--gb-mid);
+      position: relative;
+      image-rendering: pixelated;
+      overflow: hidden;
+      background: repeating-linear-gradient(0deg, var(--gb-dark), var(--gb-dark) 8px, #123f12 8px, #123f12 16px);
+    }
+
+    /* --- Centered content layer --- */
+    .content { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
+
+    /* --- Welcome screen --- */
+    .card {
+      background: var(--gb-mid);
+      border: 4px solid var(--gb-lite);
+      border-radius: 12px;
+      padding: 20px 24px;
+      text-align: center;
+      box-shadow: 0 6px 0 var(--gb-dark);
+    }
+    .btn { cursor: pointer; display: inline-block; margin-top: 12px; padding: 10px 16px; border: 3px solid var(--gb-lite); background: var(--gb-pale); color: var(--gb-dark); font-weight: 700; box-shadow: 0 4px 0 var(--gb-dark); text-transform: uppercase; letter-spacing: 1px; }
+    .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--gb-dark); }
+
+    /* --- Curtains --- */
+    .curtain { position: absolute; top:0; bottom:0; width: 55%; background: repeating-linear-gradient(90deg, var(--gb-lite), var(--gb-lite) 6px, var(--gb-mid) 6px, var(--gb-mid) 12px); z-index: 5; transition: transform 900ms steps(9); }
+    .curtain.left  { left: 0; transform: translateX(0); box-shadow: inset -8px 0 0 var(--gb-dark); }
+    .curtain.right { right: 0; transform: translateX(0); box-shadow: inset 8px 0 0 var(--gb-dark); }
+    .curtains-open .curtain.left  { transform: translateX(-100%); }
+    .curtains-open .curtain.right { transform: translateX(100%); }
+
+    /* --- Pixel characters (placeholders pulling curtains) --- */
+    .char { position: absolute; bottom: 12px; width: 48px; height: 48px; background: var(--gb-pale); border: 4px solid var(--gb-lite); box-shadow: 0 3px 0 var(--gb-dark); z-index: 6; }
+    .char::after { content:""; position: absolute; width: 8px; height: 8px; background: var(--gb-dark); left: 16px; top: 12px; box-shadow: 12px 0 0 var(--gb-dark); /* two eyes */ }
+    .char-left  { left: 10px; }
+    .char-right { right: 10px; }
+    @keyframes pull {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    .pulling { animation: pull 600ms steps(3) infinite; }
+
+    /* --- Choice screen --- */
+    .panel { width: 100%; max-width: 640px; }
+    h1, h2, p { margin: 0 0 8px 0; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+    .option { padding: 14px 12px; border: 3px solid var(--gb-lite); background: var(--gb-mid); color: var(--gb-pale); text-align: center; font-weight: 700; cursor: pointer; box-shadow: 0 4px 0 var(--gb-dark); }
+    .option:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--gb-dark); }
+    .msg { margin-top: 10px; min-height: 24px; opacity: 0.9; }
+
+    /* --- Fireworks canvas overlays the scene --- */
+    canvas#fx { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+
+    /* --- Status bar --- */
+    .status { position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 6px 10px; background: rgba(0,0,0,0.25); border: 2px solid var(--gb-lite); border-radius: 8px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="frame" id="frame">
+    <canvas id="fx"></canvas>
+
+    <!-- Curtains + characters -->
+    <div class="curtain left"></div>
+    <div class="curtain right"></div>
+    <div class="char char-left pulling"></div>
+    <div class="char char-right pulling"></div>
+
+    <div class="content" id="screen">
+      <!-- Welcome Screen -->
+      <div class="card" id="welcome">
+        <h1>Welcome</h1>
+        <p>Click to continue</p>
+        <button class="btn" id="startBtn">Start</button>
+      </div>
+
+      <!-- Choice Screen (hidden initially) -->
+      <div class="panel" id="choices" style="display:none">
+        <h2>Choose your university</h2>
+        <div class="grid">
+          <button class="option" data-key="A">University A</button>
+          <button class="option" data-key="B">University B</button>
+          <button class="option" data-key="C">University C</button>
+          <button class="option" data-key="D" id="correct">University D</button>
+        </div>
+        <div class="msg" id="message"></div>
+      </div>
+    </div>
+
+    <!-- Status bar for subtle tips/messages -->
+    <div class="status" id="status">VibeCoding: placeholder assets, retro look, sound on click.</div>
+  </div>
+
+  <script>
+    // --- Minimal audio engine (WebAudio) ---
+    const Audio = (() => {
+      let ctx; 
+      const ensure = () => { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); return ctx; };
+      const beep = (freq=220, dur=0.12, type='square', vol=0.15) => {
+        const c = ensure();
+        const o = c.createOscillator();
+        const g = c.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.value = vol; o.connect(g); g.connect(c.destination);
+        const now = c.currentTime;
+        o.start(now); o.stop(now + dur);
+      };
+      const melody = (notes=[{f:523,d:0.14},{f:659,d:0.14},{f:784,d:0.18},{f:1046,d:0.24}], gap=0.04) => {
+        const c = ensure();
+        let t = c.currentTime;
+        notes.forEach(n=>{
+          const o = c.createOscillator();
+          const g = c.createGain();
+          o.type = 'square'; o.frequency.value = n.f;
+          g.gain.value = 0.12; o.connect(g); g.connect(c.destination);
+          o.start(t); o.stop(t + n.d);
+          t += n.d + gap;
+        });
+      };
+      return { beep, melody };
+    })();
+
+    // --- Fireworks (simple particle system) ---
+    const Fireworks = (()=>{
+      const c = document.getElementById('fx');
+      const ctx = c.getContext('2d');
+      let W,H, raf, particles=[];
+      const rnd = (a,b)=>a+Math.random()*(b-a);
+      const resize = () => { W = c.width = c.offsetWidth; H = c.height = c.offsetHeight; };
+      const burst = (x,y, count=90) => {
+        for(let i=0;i<count;i++){
+          const ang = Math.random()*Math.PI*2;
+          const spd = rnd(1.2, 3.4);
+          particles.push({ x, y, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, life: rnd(40,80), age:0 });
+        }
+        if(!raf) loop();
+      };
+      const loop = () => {
+        raf = requestAnimationFrame(loop);
+        ctx.clearRect(0,0,W,H);
+        for(let i=particles.length-1;i>=0;i--){
+          const p = particles[i];
+          p.age++; p.x += p.vx; p.y += p.vy; p.vy += 0.02; // gravity
+          const alpha = 1 - p.age/p.life;
+          if(alpha <= 0){ particles.splice(i,1); continue; }
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = '#9bbc0f';
+          ctx.fillRect(p.x, p.y, 3, 3);
+          ctx.globalAlpha = 1;
+        }
+        if(particles.length===0){ cancelAnimationFrame(raf); raf = null; }
+      };
+      window.addEventListener('resize', resize);
+      resize();
+      return { burst };
+    })();
+
+    // --- App state & flow ---
+    const frame = document.getElementById('frame');
+    const startBtn = document.getElementById('startBtn');
+    const welcome = document.getElementById('welcome');
+    const choices = document.getElementById('choices');
+    const message = document.getElementById('message');
+    const status = document.getElementById('status');
+
+    let correctKey = 'D'; // default correct option
+    let correctClickedOnce = false;
+
+    const openCurtains = () => {
+      frame.classList.add('curtains-open');
+      document.querySelectorAll('.char').forEach(el=>el.classList.remove('pulling'));
+    };
+
+    startBtn.addEventListener('click', () => {
+      openCurtains();
+      welcome.style.display = 'none';
+      choices.style.display = 'block';
+      status.textContent = 'Pick the correct university (D is set as correct for now).';
+      Audio.beep(440, 0.1); // subtle feedback
+    });
+
+    document.querySelectorAll('.option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        if(key !== correctKey){
+          message.textContent = 'Incorrect choice. This is not the university you chose.';
+          Audio.beep(160, 0.12, 'square', 0.18);
+          return;
+        }
+
+        // Correct path
+        if(!correctClickedOnce){
+          correctClickedOnce = true;
+          message.textContent = 'First attempt didn\'t work. Try again!';
+          status.textContent = 'Correct detected once. Choose it again to celebrate!';
+          Audio.beep(360, 0.12);
+          return;
+        }
+
+        // Second correct click -> fireworks + congrats
+        message.textContent = '🎉 Congratulations! You made it in!';
+        status.textContent = 'Success! Fireworks triggered.';
+        Audio.melody();
+        const rect = btn.getBoundingClientRect();
+        const frameRect = frame.getBoundingClientRect();
+        // firework origin around the button center
+        const x = rect.left - frameRect.left + rect.width/2;
+        const y = rect.top  - frameRect.top  + rect.height/2;
+        for(let i=0;i<5;i++) setTimeout(()=>Fireworks.burst(x, y), i*120);
+      });
+    });
+
+    // --- Public API (for your later customization) ---
+    window.VibeApp = {
+      setOptions(labels=['University A','University B','University C','University D'], correctIndex=3) {
+        const nodes = Array.from(document.querySelectorAll('.option'));
+        nodes.forEach((n,i)=>{ n.textContent = labels[i] ?? `Option ${i+1}`; n.dataset.key = String.fromCharCode(65+i); });
+        correctKey = String.fromCharCode(65 + (correctIndex|0));
+        correctClickedOnce = false;
+        status.textContent = `Correct is set to ${correctKey}.`;
+      },
+      setMessages({ incorrect, firstTry, success }={}){
+        if(incorrect) window._msgIncorrect = incorrect;
+        if(firstTry) window._msgFirst = firstTry;
+        if(success) window._msgSuccess = success;
+      }
+    };
+  </script>
+</body>
+</html>
