@@ -10,27 +10,26 @@
   html,body{height:100%;margin:0}
 
   :root{
-    /* Sakura / cream */
-    --bg: #f6dee6;
+    --bg: #f6dee6;             /* sakura pink */
     --panel: #ffeaf1;
     --panel-2:#ffd7e6;
     --ink:#1d1b20;
     --accent:#d46a8f;
     --line: rgba(0,0,0,.20);
     --shadow: rgba(0,0,0,.18);
-    --green:#9bbc0f; /* for fireworks pixels */
+    --green:#9bbc0f; /* confetti dots */
   }
 
   body{
-    font-family: "VT323", ui-monospace, monospace;
-    color: var(--ink);
+    font-family:"VT323",ui-monospace,monospace;
+    color:var(--ink);
     background:
       var(--bg)
-      url('assets/expanded_bg.jpg') center/800px repeat fixed; /* GLOBAL BACKGROUND */
+      url('assets/global_bg.jpg') center/900px repeat fixed; /* GLOBAL BG */
     display:grid; place-items:center;
   }
 
-  /* GAME FRAME */
+  /* Frame */
   .frame{
     width:min(96vw, 980px);
     aspect-ratio:16/9;
@@ -43,33 +42,27 @@
       inset 0 0 0 6px #ffd1e0,
       inset 0 0 0 14px #fff;
     overflow:hidden;
-    image-rendering: pixelated;
+    image-rendering:pixelated;
   }
 
-  /* Curtains (centered + more dramatic) */
-  .curtain{
-    position:absolute; top:0; bottom:0; width:58%;
-    background:
-      repeating-linear-gradient(90deg,#ff9ec0 0 8px,#ff7aa7 8px 16px);
-    box-shadow: inset 0 0 0 10px #ffb3cc, 0 10px 40px var(--shadow);
-    z-index:7;
-    transform: translateX(0);
-    transition: transform 1200ms cubic-bezier(.16,.84,.21,1.04);
+  /* Soft blur veil instead of curtains */
+  .veil{
+    position:absolute; inset:0; z-index:7;
+    backdrop-filter: blur(6px) saturate(1.1);
+    background: rgba(255, 198, 214, .28);
+    opacity:1;
+    transition: opacity 450ms ease;
   }
-  .curtain.left { left:0;  clip-path: polygon(0 0,100% 0,85% 100%,0 100%); box-shadow: inset -10px 0 0 #ff7aa7, 0 10px 40px var(--shadow);}
-  .curtain.right{ right:0; clip-path: polygon(15% 0,100% 0,100% 100%,0 100%); box-shadow: inset 10px 0 0 #ff7aa7, 0 10px 40px var(--shadow);}
+  .veil.hidden{ opacity:0; pointer-events:none; }
 
-  .curtains-open .curtain.left  { transform: translateX(-100%); }
-  .curtains-open .curtain.right { transform: translateX(100%); }
-
-  /* Content layers */
+  /* Layers */
   .layer{position:absolute; inset:0; display:grid; place-items:center; padding:24px}
   .hidden{display:none}
 
   /* Cards / buttons */
   .card{
     background:#fff; border:4px solid #ffd1e0; border-radius:16px;
-    box-shadow: 0 10px 0 #ffb6cf, 0 20px 40px var(--shadow);
+    box-shadow:0 10px 0 #ffb6cf, 0 20px 40px var(--shadow);
     padding:20px 24px; text-align:center; max-width:640px;
   }
   h1,h2,p{margin:.25rem 0}
@@ -105,7 +98,7 @@
     display:flex; gap:10px; align-items:flex-start;
     padding:10px 12px; background: rgba(0,0,0,.25);
     border:3px solid #ffb6cf; border-radius:12px; color:#fff; font-size:22px;
-    z-index:8;
+    z-index:6;
   }
   .avatar{
     width:42px; height:42px; border-radius:8px; border:3px solid #ffb6cf; overflow:hidden; flex:0 0 auto; background:#fff;
@@ -113,16 +106,15 @@
   .avatar img{width:100%;height:100%;object-fit:cover}
 
   /* FX canvas */
-  canvas#fx{ position:absolute; inset:0; pointer-events:none; z-index:6 }
+  canvas#fx{ position:absolute; inset:0; pointer-events:none; z-index:5 }
 </style>
 </head>
 <body>
   <div class="frame" id="frame">
     <canvas id="fx"></canvas>
 
-    <!-- Curtains -->
-    <div class="curtain left"></div>
-    <div class="curtain right"></div>
+    <!-- Blur veil (replaces curtains) -->
+    <div class="veil" id="veil"></div>
 
     <!-- Welcome -->
     <div class="layer" id="welcomeLayer">
@@ -136,12 +128,20 @@
     <!-- Player Select -->
     <div class="layer hidden" id="playerLayer">
       <div class="card" style="background:transparent; box-shadow:none; border:none">
-        <h2 style="font-size:38px; text-align:center;">Select your player</h2>
+        <h2 style="font-size:38px; text-align:center;">Select your character</h2>
         <div class="player-card" id="playerCard" title="Click to select">
-          <!-- Replace the src file with your image path -->
           <img src="assets/player-profile.jpg" alt="Player profile">
         </div>
         <p style="opacity:.8">Click the card to choose.</p>
+      </div>
+    </div>
+
+    <!-- Click to start (after character picked) -->
+    <div class="layer hidden" id="startLayer">
+      <div class="card">
+        <h2 style="font-size:38px;">Character selected!</h2>
+        <p>Press the button to start.</p>
+        <button class="btn" id="startBtn">Click to start</button>
       </div>
     </div>
 
@@ -205,33 +205,40 @@ const FX = (() => {
   return { burst };
 })();
 
-/* ===== typewriter for dialog ===== */
+/* ===== typewriter text ===== */
 function typeText(el, text, speed=22){
   el.textContent='';
   let i=0; const id=setInterval(()=>{ el.textContent += text[i++]||''; if(i>text.length){clearInterval(id);} }, speed);
 }
 
 /* ===== flow ===== */
-const frame = document.getElementById('frame');
+const veil         = document.getElementById('veil');
 const welcomeLayer = document.getElementById('welcomeLayer');
 const playerLayer  = document.getElementById('playerLayer');
+const startLayer   = document.getElementById('startLayer');
 const choiceLayer  = document.getElementById('choiceLayer');
 const dialogText   = document.getElementById('dialogText');
 
+/* Welcome -> Player Select */
 document.getElementById('toSelect').addEventListener('click', ()=>{
   welcomeLayer.classList.add('hidden');
   playerLayer.classList.remove('hidden');
   SFX.beep(640,.12);
 });
 
-/* Select player (clickable card) */
+/* Pick player (clickable) -> Click to start */
 document.getElementById('playerCard').addEventListener('click', ()=>{
   SFX.beep(740,.14);
-  // Curtains open into choices
   playerLayer.classList.add('hidden');
+  startLayer.classList.remove('hidden');
+});
+
+/* Click to start -> Choices + dialog; hide blur veil */
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  SFX.beep(780,.14);
+  startLayer.classList.add('hidden');
   choiceLayer.classList.remove('hidden');
-  frame.classList.add('curtains-open');
-  // First dialog line
+  veil.classList.add('hidden');
   typeText(dialogText, "Hey there! I'm your guide. Pick the correct destination…");
 });
 
@@ -243,9 +250,12 @@ document.querySelectorAll('.option').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const key = btn.dataset.key;
     if(key!==correctKey){
-      // wrong answers: quick beep + snark
       SFX.beep(180,.10);
-      const wrong = {A:"NSU: you are too broke for this.", C:"AIUB: whoops, not this one.", D:"BRAC: whoa, you're not going here—too far!"}[key] || "Nope.";
+      const wrong = {
+        A:"NSU: you are too broke for this.",
+        C:"AIUB: whoops, not this one.",
+        D:"BRAC: whoa, you're not going here—too far!"
+      }[key] || "Nope.";
       typeText(dialogText, wrong);
       return;
     }
@@ -255,10 +265,9 @@ document.querySelectorAll('.option').forEach(btn=>{
       SFX.beep(360,.12);
       return;
     }
-    // success!
     typeText(dialogText, "Congratulations! This is the first step to your dreams!");
     SFX.beep(620,.12);
-    const r = btn.getBoundingClientRect(), fr = frame.getBoundingClientRect();
+    const r = btn.getBoundingClientRect(), fr = document.querySelector('.frame').getBoundingClientRect();
     const x = r.left-fr.left+r.width/2, y = r.top-fr.top+r.height/2;
     for(let i=0;i<6;i++) setTimeout(()=>FX.burst(x,y), i*120);
   });
