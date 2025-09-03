@@ -12,12 +12,11 @@
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
   :root{
-    /* base palette (Player 1-ish) */
+    /* Base / Player 1 theme (soft/pastel) */
     --bg-pale:#ffd9e6;
     --ink:#231f20;
     --white:#fff;
 
-    /* theme vars (overridden by .theme-player2) */
     --frame-top:#ffe6f1;
     --frame-bot:#ffd1e4;
     --frame-border:#ffc3da;
@@ -38,12 +37,12 @@
   }
   body::before{
     content:"";
-    position:fixed; inset:-3vmax;      /* overscan */
+    position:fixed; inset:-6vmax;      /* extra overscan to kill any side gaps */
     background:url('assets/output.png') center/cover no-repeat;
     z-index:-1;
   }
 
-  /* Frame with themeable gradient + border */
+  /* Frame (themeable via CSS vars) */
   .frame{
     width:min(95vw,1200px);
     aspect-ratio:16/9;
@@ -54,34 +53,42 @@
     background:linear-gradient(to bottom, var(--frame-top), var(--frame-bot));
     transition:
       background 0.8s ease-in-out,
-      box-shadow 0.8s ease-in-out;
+      box-shadow 0.8s ease-in-out,
+      color 0.2s ease-in-out;
   }
-  /* Looping GIF kept, opacity themeable */
+  /* Looping GIF overlay (stays constant) */
   .frame::after{
     content:"";
     position:absolute; inset:0;
-    background:url('assets/frame-bg.gif') center/52% auto no-repeat;
+    background:url('assets/frame-bg.gif') center/50% auto no-repeat;
     opacity:var(--gif-opacity);
     pointer-events:none;
   }
 
-  /* THEME: Player 2 (dimmer/darker + black chrome) */
+  /* THEME: Player 2 — darker, dimmer, white text, black UI */
   .theme-player2{
-    --frame-top:#3a0c15;
-    --frame-bot:#120608;
-    --frame-border:#111;
-    --gif-opacity:.12;
-
-    --dialog-bg:#141414c0;
+    --ink:#f3f6fa;                 /* global text becomes light */
+    --frame-top:#2a0b0f;           /* much darker gradient */
+    --frame-bot:#090406;
+    --frame-border:#111;           /* frame inner border dark */
+    --gif-opacity:.28;             /* GIF more visible */
+    --dialog-bg:#141414c0;         /* dark dialog */
     --dialog-border:#111;
     --dialog-fg:#ffffff;
   }
+  .theme-player2 .option{
+    background:#000; color:#fff; border-color:#fff;
+    text-shadow:0 0 3px #fff, 0 0 6px #fff; /* white “outline” glow */
+  }
+  .theme-player2 .card,
+  .theme-player2 .btn,
+  .theme-player2 .player{ border-color:#111; }
+  .theme-player2 .badge{ border-color:#111; }
 
-  /* Sliding doors (softer than candy curtains) */
+  /* Sliding doors (subtle) */
   .door{
     position:absolute; top:0; bottom:0; width:55%;
     z-index:4;
-    /* subtle panel texture */
     background:
       linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.08)),
       repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 8px, transparent 8px 20px);
@@ -97,7 +104,7 @@
   .content{position:absolute; inset:0; display:grid; place-items:center; padding:20px; z-index:6}
   .panel{width:100%; max-width:960px; position:relative}
 
-  /* Headings: more “entering game” drama, but subtle */
+  /* Headings: Gameboy intro vibe */
   h1{font: 700 36px 'Press Start 2P', monospace; letter-spacing:1px; margin:0 0 8px; text-shadow:0 2px 0 #fff8}
   h2{font: 700 28px 'Press Start 2P', monospace; letter-spacing:1px; margin:0 0 8px; text-shadow:0 2px 0 #fff8}
   p{margin:0}
@@ -125,14 +132,12 @@
   .player:hover{transform:translateY(-3px)}
   .player img{width:100%;height:100%;object-fit:cover;object-position:center}
 
-  /* Destination title well above buttons */
+  /* Destination title — top center above options */
   .top-title{
     position:absolute; left:0; right:0; top:18px; text-align:center;
     font: 700 26px 'Press Start 2P', monospace;
   }
-  .grid{
-    margin-top:172px; display:grid; grid-template-columns:repeat(2,1fr); gap:16px;
-  }
+  .grid{ margin-top:172px; display:grid; grid-template-columns:repeat(2,1fr); gap:16px }
   .option{
     padding:14px 16px; font-size:26px; text-align:center; background:#fff;
     border:4px solid var(--frame-border); border-radius:12px;
@@ -149,23 +154,25 @@
   }
   .dialog img{width:36px;height:36px;object-fit:cover;border-radius:8px;border:2px solid var(--dialog-border)}
 
-  /* Success floating card (gentle) */
+  /* Success floating card (shows full image) */
   .floatCard{
     position:absolute; left:50%; top:50%;
-    width:220px; aspect-ratio:1/1.1;
+    width:280px; height:320px;  /* taller to allow full image containment */
     transform:translate(-50%,-50%);
     border-radius:14px; overflow:hidden;
-    border:4px solid var(--frame-border); display:none; z-index:8; background:#fff;
+    border:4px solid var(--frame-border); display:none; z-index:10; background:#000;  /* black letterbox */
     box-shadow:0 8px 30px rgba(0,0,0,.25)
   }
-  canvas#fx{position:absolute; inset:0; z-index:7; pointer-events:none}
+  .floatCard img{width:100%;height:100%;object-fit:contain;object-position:center}
+
+  /* FX canvas on TOP so confetti/fireworks are never hidden */
+  canvas#fx{position:absolute; inset:0; z-index:11; pointer-events:none}
 
   /* Selected player badge (top-left) */
   .badge{
     position:absolute; top:12px; left:12px; z-index:8;
     width:64px; height:64px; border:3px solid var(--frame-border); border-radius:10px;
-    background:#fff; overflow:hidden; display:none;
-    image-rendering: pixelated;
+    background:#fff; overflow:hidden; display:none; image-rendering:pixelated;
   }
   .badge img{width:100%;height:100%;object-fit:cover}
 
@@ -248,8 +255,9 @@ const Typewriter = (function(){
   }
   async function backspace(el, totalMs=3000){
     stop();
-    const full = el.textContent;
+    const full = el.textContent || '';
     let i = full.length;
+    if(i===0){ return; }
     const step = Math.max(12, Math.floor(totalMs/Math.max(1, full.length)));
     return new Promise(res=>{
       timer = setInterval(()=>{
@@ -265,7 +273,7 @@ const Typewriter = (function(){
 let floatRAF, floatT=0;
 function startFloat(el){
   cancelAnimationFrame(floatRAF);
-  const amp=10, spd=0.0009;   // slower + smaller
+  const amp=8, spd=0.0006;   // slower + smaller
   let last = performance.now();
   function loop(now){
     const dt = Math.min(32, now - last); last = now;
@@ -278,7 +286,7 @@ function startFloat(el){
   floatRAF = requestAnimationFrame(loop);
 }
 
-/* Simple fireworks + confetti */
+/* Fireworks + confetti (rendered above all UI) */
 const Fx = (function(){
   const c = $('#fx'), ctx = c.getContext('2d');
   let W=0,H=0, parts=[], raf;
@@ -343,13 +351,15 @@ $('#startBtn').addEventListener('click', async ()=>{
   await Typewriter.type(dialogText, "Choose your aesthetic", 18);
 });
 
-/* PLAYER -> QUIZ (+theme swap, smooth) */
+/* PLAYER -> QUIZ (+theme swap with smooth transition) */
 $$('.player').forEach(btn=>{
   btn.addEventListener('click', async ()=>{
     chosenPlayerSrc = btn.dataset.src;
     const theme = btn.dataset.theme;
-    frame.classList.remove('theme-player1','theme-player2');
-    if(theme==='player1'){ frame.classList.add('theme-player1'); }
+
+    // Player 1: restore/keep base pastel theme (no extra class)
+    // Player 2: apply dark theme class
+    frame.classList.remove('theme-player2');
     if(theme==='player2'){ frame.classList.add('theme-player2'); }
 
     // Show chosen player badge
@@ -378,18 +388,21 @@ $$('.option').forEach(btn=>{
       return;
     }
 
-    if(first){ await Typewriter.type(dialogText, "First attempt didn't work, try again!", 18); return; }
+    if(first){
+      await Typewriter.type(dialogText, "First attempt didn't work, try again!", 18);
+      return;
+    }
 
-    // Success
-    await Typewriter.type(dialogText, "Congratulations, this is the first step to your dreams.", 18);
-
+    // Success: show floating image AT THE SAME TIME the message starts typing
     if(chosenPlayerSrc){
       floatImg.src = chosenPlayerSrc;
       floatCard.style.display = 'block';
-      startFloat(floatCard);
+      startFloat(floatCard);   // ultra-gentle sway
     }
 
-    // Fireworks + confetti from corners & top
+    await Typewriter.type(dialogText, "Congratulations, this is the first step to your dreams.", 18);
+
+    // Fireworks + confetti (corners and top)
     const r = frame.getBoundingClientRect();
     Fx.burst(30, r.height-30, '#ff79a8', 140);
     Fx.burst(r.width-30, r.height-30, '#ffd400', 140);
