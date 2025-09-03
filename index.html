@@ -40,7 +40,7 @@
     opacity:var(--gif-opacity); pointer-events:none;
   }
 
-  /* Player 1 explicit theme (visible change) */
+  /* Player 1 explicit theme */
   .theme-player1{
     --ink:#231f20;
     --frame-top:#ffeaf4; --frame-bot:#ffcade; --frame-border:#ff9fcf; --gif-opacity:.22;
@@ -133,7 +133,6 @@
   }
   .floatCard img{width:100%;height:100%;object-fit:contain;object-position:center}
 
-  /* FX canvas ON TOP */
   canvas#fx{position:absolute; inset:0; z-index:11; pointer-events:none}
 
   .badge{
@@ -233,12 +232,12 @@ function startFloat(el){
   floatRAF=requestAnimationFrame(loop);
 }
 
-/* FX with DPI-aware canvas so effects fill the entire frame */
+/* FX module — DPI aware + continuous confetti rain */
 const Fx=(function(){
   const c=$('#fx'), ctx=c.getContext('2d');
-  let cssW=0, cssH=0, dpr=1, parts=[], raf;
+  let cssW=0, cssH=0, dpr=1, parts=[], raf, rainTimer=null;
 
-  function resize(){
+  function doResize(){
     const rect=c.getBoundingClientRect();
     dpr = window.devicePixelRatio || 1;
     cssW = rect.width; cssH = rect.height;
@@ -246,9 +245,13 @@ const Fx=(function(){
     c.height = Math.round(cssH * dpr);
     c.style.width  = cssW + 'px';
     c.style.height = cssH + 'px';
-    ctx.setTransform(dpr,0,0,dpr,0,0);  // draw using CSS pixel coords
+    ctx.setTransform(dpr,0,0,dpr,0,0); // draw in CSS pixels
   }
-  window.addEventListener('resize', resize); resize();
+  // Handle both viewport and element resizes
+  const ro = new ResizeObserver(doResize);
+  ro.observe(c);
+  window.addEventListener('resize', doResize);
+  doResize();
 
   function push(p){ parts.push(p); if(!raf) loop(); }
 
@@ -258,154 +261,20 @@ const Fx=(function(){
       push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:60+Math.random()*40,age:0,color,size:3,grav:0.03});
     }
   }
+
+  // One-shot wide rain (kept for manual triggers)
   function confettiRain(rows=7, perRow=36){
     for(let r=0;r<rows;r++){
       const y = -10 - r*14;
       for(let i=0;i<perRow;i++){
-        const x = (i+Math.random())/perRow * cssW;  // full canvas width
+        const x = (i+Math.random())/perRow * cssW;  // full current width
         const v = 1.5 + Math.random()*1.5;
         const col = (i%3===0)?'#ff79a8':(i%3===1)?'#ffffff':'#ffd400';
         push({x,y,vx:(Math.random()-.5)*0.6,vy:v,life:120+Math.random()*40,age:0,color:col,size:3,grav:0.01});
       }
     }
   }
-  function sparksAround(x,y,count=80){
-    for(let i=0;i<count;i++){
-      const a=Math.random()*Math.PI*2, v=0.6+Math.random()*1.2;
-      const col = (i%2)?'#ffd400':'#ff79a8';
-      push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:40+Math.random()*20,age:0,color:col,size:2,grav:0.01});
-    }
-  }
 
-  function loop(){
-    raf=requestAnimationFrame(loop);
-    ctx.clearRect(0,0,cssW,cssH);
-    for(let i=parts.length-1;i>=0;i--){
-      const p=parts[i];
-      p.age++; p.x+=p.vx; p.y+=p.vy; p.vy+=p.grav||0.02;
-      const a=1 - p.age/p.life;
-      if(a<=0){ parts.splice(i,1); continue; }
-      ctx.globalAlpha=Math.max(0,a);
-      ctx.fillStyle=p.color;
-      ctx.fillRect(p.x,p.y,p.size||3,p.size||3);
-      ctx.globalAlpha=1;
-    }
-    if(parts.length===0){ cancelAnimationFrame(raf); raf=0; }
-  }
-
-  function size(){ return {w:cssW, h:cssH, canvas:c}; }
-
-  return { burst, confettiRain, sparksAround, resize, size };
-})();
-
-/* -------- App -------- */
-const frame=$('#frame');
-const startPane=$('#startPane');
-const playerPane=$('#playerPane');
-const quizPane=$('#quizPane');
-const titleTop=$('#titleTop');
-const optionsGrid=$('#optionsGrid');
-
-const dialogText=$('#dialogText');
-
-const floatCard=$('#floatCard');
-const floatImg=$('#floatImg');
-
-const badge=$('#playerBadge');
-const badgeImg=$('#badgeImg');
-
-const successTitle=$('#successTitle');
-
-function openDoors(){ frame.classList.add('open'); }
-function closeDoors(){ frame.classList.remove('open'); }
-
-let chosenPlayerSrc=null;
-let firstClicks={IUB:false,NSU:false,AIUB:false,BRAC:false};
-const correctKey='IUB';
-
-$('#startBtn').addEventListener('click', async()=>{
-  openDoors();
-  startPane.classList.add('hide');
-  playerPane.classList.remove('hide');
-  await Typewriter.type(dialogText,"Choose your aesthetic",18);
-});
-
-$$('.player').forEach(btn=>{
-  btn.addEventListener('click', async()=>{
-    chosenPlayerSrc=btn.dataset.src;
-    const theme=btn.dataset.theme;
-
-    frame.classList.remove('theme-player1','theme-player2');
-    if(theme==='player1') frame.classList.add('theme-player1');
-    if(theme==='player2') frame.classList.add('theme-player2');
-
-    badgeImg.src=chosenPlayerSrc; badge.style.display='block';
-
-    playerPane.classList.add('hide');
-    quizPane.classList.remove('hide');
-    await Typewriter.type(dialogText,"Woohoo! Where do you want to go?",18);
-  });
-});
-
-$$('.option').forEach(btn=>{
-  btn.addEventListener('click', async()=>{
-    const key=btn.dataset.key;
-    const first=!firstClicks[key]; firstClicks[key]=true;
-
-    if(key!==correctKey){
-      let msg="";
-      if(key==='NSU')  msg = first ? "You're too broke for this." : "Ah, you miss me that much.";
-      if(key==='AIUB') msg = first ? "Don't go there." : "Whoa, whoa, whoa, don't go there now, come on.";
-      if(key==='BRAC') msg = first ? "Whoa, I thought you were scared of presentations." : "Damn, I don't think you have the money for this.";
-      await Typewriter.type(dialogText,msg,18);
-      return;
-    }
-
-    if(first){
-      await Typewriter.type(dialogText,"First attempt didn't work, try again!",18);
-      return;
-    }
-
-    /* SUCCESS */
-    badge.style.display='none';                 // hide top-left badge
-    optionsGrid.classList.add('faded');        // fade choices
-    titleTop.classList.add('faded');
-    successTitle.style.display='block';        // show big title
-
-    if(chosenPlayerSrc){
-      floatImg.src=chosenPlayerSrc;
-      floatCard.style.display='block';
-      startFloat(floatCard);
-    }
-
-    // Use canvas CSS size so effects fill entire frame, across devices
-    const {w:W, h:H, canvas:cv} = Fx.size();
-
-    // Corner fireworks (both bottom corners)
-    Fx.burst(15, H-20, '#ff79a8', 160);
-    Fx.burst(W-15, H-20, '#ffd400', 160);
-
-    // Confetti rain across the WHOLE top width
-    Fx.confettiRain(8, 48);
-
-    // Sparks around the floating image center (convert rects to canvas coords)
-    const fc = floatCard.getBoundingClientRect();
-    const cvr = cv.getBoundingClientRect();
-    const cx = fc.left - cvr.left + fc.width/2;
-    const cy = fc.top  - cvr.top  + fc.height/2;
-    Fx.sparksAround(cx, cy, 120);
-
-    await Typewriter.type(dialogText,"Congratulations, this is the first step to your dreams.",18);
-
-    setTimeout(async()=>{
-      await Typewriter.backspace(dialogText,3000);
-      setTimeout(()=>Typewriter.type(dialogText,"I love you",26),2000);
-    },3000);
-  });
-});
-
-closeDoors();
-window.addEventListener('load', ()=>{ Fx.resize(); });
-</script>
-</body>
-</html>
+  // Continuous rain: spawns every tick across FULL width
+  function startConfettiRain({piecesPerSecond=600, colors=['#ff79a8','#ffffff','#ffd400']}={}){
+    stopConfettiRain
