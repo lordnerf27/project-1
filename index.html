@@ -9,44 +9,26 @@
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
   :root{
-    /* Neutral/base (pre-pick) */
-    --bg-pale:#ffd9e6;
-    --ink:#231f20;
-    --white:#fff;
+    --bg-pale:#ffd9e6; --ink:#231f20; --white:#fff;
 
-    /* Default frame variables (soft) */
-    --frame-top:#ffe6f1;
-    --frame-bot:#ffd1e4;
-    --frame-border:#ffc3da;
-    --gif-opacity:.18;
-
-    --dialog-bg:#b68aa5d0;
-    --dialog-border:#ffc3da;
-    --dialog-fg:#ffffff;
-
-    --title-color:#000; /* can be themed */
+    /* Base (pre-pick & Player 1 baseline) */
+    --frame-top:#ffe6f1; --frame-bot:#ffd1e4; --frame-border:#ffc3da; --gif-opacity:.18;
+    --dialog-bg:#b68aa5d0; --dialog-border:#ffc3da; --dialog-fg:#ffffff;
+    --title-color:#000;
   }
-
   body{
     font-family:'VT323',ui-monospace,monospace;
-    color:var(--ink);
-    background:var(--bg-pale);
-    display:grid;place-items:center;
-    overflow:hidden;
+    color:var(--ink); background:var(--bg-pale);
+    display:grid; place-items:center; overflow:hidden;
   }
-  /* Global bg image (single, no seams) */
   body::before{
-    content:"";
-    position:fixed; inset:-6vmax;
-    background:url('assets/output.png') center/cover no-repeat;
-    z-index:-1;
+    content:""; position:fixed; inset:-6vmax;
+    background:url('assets/output.png') center/cover no-repeat; z-index:-1;
   }
 
   .frame{
-    width:min(95vw,1200px);
-    aspect-ratio:16/9;
-    border-radius:22px;
-    border:10px solid var(--white);
+    width:min(95vw,1200px); aspect-ratio:16/9;
+    border-radius:22px; border:10px solid var(--white);
     box-shadow:0 28px 60px rgba(0,0,0,.25), inset 0 0 0 6px var(--frame-border);
     position:relative; overflow:hidden;
     background:linear-gradient(to bottom,var(--frame-top),var(--frame-bot));
@@ -58,42 +40,23 @@
     opacity:var(--gif-opacity); pointer-events:none;
   }
 
-  /* THEME: Player 1 (explicit so it *always* changes) */
+  /* Player 1 explicit theme (visible change) */
   .theme-player1{
     --ink:#231f20;
-    --frame-top:#ffeaf4;         /* a touch lighter than base */
-    --frame-bot:#ffcade;         /* warmer pastel bottom */
-    --frame-border:#ff9fcf;      /* brighter inner border */
-    --gif-opacity:.22;
-    --dialog-bg:#c999b1d0;
-    --dialog-border:#ff9fcf;
-    --dialog-fg:#ffffff;
+    --frame-top:#ffeaf4; --frame-bot:#ffcade; --frame-border:#ff9fcf; --gif-opacity:.22;
+    --dialog-bg:#c999b1d0; --dialog-border:#ff9fcf; --dialog-fg:#ffffff;
     --title-color:#4b2f3a;
   }
-
-  /* THEME: Player 2 (dim/dark + neon title) */
+  /* Player 2 dim/dark + neon “destination” */
   .theme-player2{
     --ink:#f3f6fa;
-    --frame-top:#2a0b0f;
-    --frame-bot:#090406;
-    --frame-border:#111;
-    --gif-opacity:.30;
-    --dialog-bg:#141414c0;
-    --dialog-border:#111;
-    --dialog-fg:#ffffff;
-    --title-color:#b56bff; /* neon-ish purple */
+    --frame-top:#2a0b0f; --frame-bot:#090406; --frame-border:#111; --gif-opacity:.30;
+    --dialog-bg:#141414c0; --dialog-border:#111; --dialog-fg:#ffffff;
+    --title-color:#b56bff;
   }
-  .theme-player2 .top-title{
-    color:var(--title-color);
-    text-shadow:0 0 6px #b56bff, 0 0 10px #b56bff;
-  }
-  .theme-player2 .option{
-    background:#000; color:#fff; border-color:#fff;
-    text-shadow:0 0 3px #fff, 0 0 6px #fff;
-  }
-  .theme-player2 .card,
-  .theme-player2 .btn,
-  .theme-player2 .player{ border-color:#111; }
+  .theme-player2 .top-title{ color:var(--title-color); text-shadow:0 0 6px #b56bff,0 0 10px #b56bff; }
+  .theme-player2 .option{ background:#000; color:#fff; border-color:#fff; text-shadow:0 0 3px #fff,0 0 6px #fff; }
+  .theme-player2 .card,.theme-player2 .btn,.theme-player2 .player{ border-color:#111; }
   .theme-player2 .badge{ border-color:#111; }
 
   /* Sliding doors */
@@ -114,25 +77,23 @@
   .content{position:absolute; inset:0; display:grid; place-items:center; padding:20px; z-index:6}
   .panel{width:100%; max-width:960px; position:relative}
 
-  /* Headings */
   h1{font:700 36px 'Press Start 2P', monospace; letter-spacing:1px; margin:0 0 8px; text-shadow:0 2px 0 #fff8}
   h2{font:700 28px 'Press Start 2P', monospace; letter-spacing:1px; margin:0 0 8px; text-shadow:0 2px 0 #fff8}
   p{margin:0}
 
   .card{
-    background:#fff6;border:4px solid var(--frame-border);border-radius:14px;
-    padding:18px 22px;text-align:center;box-shadow:0 8px 0 rgba(0,0,0,.12);
+    background:#fff6; border:4px solid var(--frame-border); border-radius:14px;
+    padding:18px 22px; text-align:center; box-shadow:0 8px 0 rgba(0,0,0,.12);
     backdrop-filter: blur(1px);
   }
   .btn{
-    cursor:pointer;margin-top:12px;padding:12px 18px;background:#fff;
-    border:3px solid var(--frame-border);border-radius:10px;
+    cursor:pointer; margin-top:12px; padding:12px 18px; background:#fff;
+    border:3px solid var(--frame-border); border-radius:10px;
     box-shadow:0 4px 0 rgba(0,0,0,.12);
     font:700 18px 'Press Start 2P', monospace;
   }
   .btn:active{transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.12)}
 
-  /* Player select */
   .players{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:14px}
   .player{
     width:190px; aspect-ratio:3/4; border-radius:14px; overflow:hidden;
@@ -142,7 +103,6 @@
   .player:hover{transform:translateY(-3px)}
   .player img{width:100%;height:100%;object-fit:cover;object-position:center}
 
-  /* Quiz */
   .top-title{
     position:absolute; left:0; right:0; top:18px; text-align:center;
     font:700 26px 'Press Start 2P', monospace; color:var(--title-color);
@@ -157,7 +117,6 @@
   .option:active{transform:translateY(2px); box-shadow:0 3px 0 rgba(0,0,0,.12)}
   .faded{ opacity:0; pointer-events:none; }
 
-  /* Dialog */
   .dialog{
     position:absolute; left:16px; right:16px; bottom:16px; z-index:7;
     background:var(--dialog-bg); border:3px solid var(--dialog-border); border-radius:12px;
@@ -166,21 +125,17 @@
   }
   .dialog img{width:36px;height:36px;object-fit:cover;border-radius:8px;border:2px solid var(--dialog-border)}
 
-  /* Floating image shows FULL pic */
   .floatCard{
-    position:absolute; left:50%; top:50%;
-    width:320px; height:360px;
-    transform:translate(-50%,-50%);
-    border-radius:14px; overflow:hidden;
+    position:absolute; left:50%; top:50%; width:320px; height:360px;
+    transform:translate(-50%,-50%); border-radius:14px; overflow:hidden;
     border:4px solid var(--frame-border); display:none; z-index:10; background:#000;
     box-shadow:0 8px 30px rgba(0,0,0,.25)
   }
   .floatCard img{width:100%;height:100%;object-fit:contain;object-position:center}
 
-  /* FX canvas on TOP */
+  /* FX canvas ON TOP */
   canvas#fx{position:absolute; inset:0; z-index:11; pointer-events:none}
 
-  /* Badge */
   .badge{
     position:absolute; top:12px; left:12px; z-index:8;
     width:64px; height:64px; border:3px solid var(--frame-border); border-radius:10px;
@@ -188,7 +143,6 @@
   }
   .badge img{width:100%;height:100%;object-fit:cover}
 
-  /* Success title at top */
   .success-title{
     position:absolute; left:0; right:0; top:22px; text-align:center;
     font:700 28px 'Press Start 2P', monospace; color:#fff;
@@ -203,12 +157,10 @@
   <div class="frame" id="frame">
     <canvas id="fx"></canvas>
 
-    <!-- Sliding doors -->
     <div class="door left"></div>
     <div class="door right"></div>
 
     <div class="content" id="screen">
-      <!-- START -->
       <div class="panel" id="startPane">
         <div class="card" style="max-width:760px;margin-inline:auto">
           <h1>WELCOME</h1>
@@ -217,7 +169,6 @@
         </div>
       </div>
 
-      <!-- PLAYER SELECT -->
       <div class="panel hide" id="playerPane">
         <div class="card">
           <h2>Pick your player</h2>
@@ -232,7 +183,6 @@
         </div>
       </div>
 
-      <!-- DESTINATION -->
       <div class="panel hide" id="quizPane">
         <div class="top-title" id="titleTop">Choose your destination!</div>
         <div class="grid" id="optionsGrid">
@@ -255,30 +205,15 @@
   </div>
 
 <script>
-/* ---------- Helpers ---------- */
 const $  = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 
-/* Typewriter with cancel */
+/* Typewriter (cancels overlapping runs) */
 const Typewriter = (function(){
-  let timer = null;
+  let timer=null;
   function stop(){ if(timer){ clearInterval(timer); timer=null; } }
-  async function type(el, text, speed=22){
-    stop(); el.textContent='';
-    return new Promise(res=>{
-      let i=0;
-      timer=setInterval(()=>{ el.textContent+=text[i++]||''; if(i>text.length){stop();res();}},speed);
-    });
-  }
-  async function backspace(el, totalMs=3000){
-    stop();
-    const full = el.textContent || ''; let i=full.length;
-    if(!i) return;
-    const step=Math.max(12, Math.floor(totalMs/Math.max(1,full.length)));
-    return new Promise(res=>{
-      timer=setInterval(()=>{ el.textContent=full.slice(0,--i); if(i<=0){stop();res();}},step);
-    });
-  }
+  async function type(el,text,speed=22){ stop(); el.textContent=''; return new Promise(res=>{ let i=0; timer=setInterval(()=>{ el.textContent+=text[i++]||''; if(i>text.length){ stop(); res(); }},speed); }); }
+  async function backspace(el,totalMs=3000){ stop(); const full=el.textContent||''; let i=full.length; if(!i) return; const step=Math.max(12,Math.floor(totalMs/Math.max(1,full.length))); return new Promise(res=>{ timer=setInterval(()=>{ el.textContent=full.slice(0,--i); if(i<=0){ stop(); res(); }},step); }); }
   return {type, backspace, stop};
 })();
 
@@ -298,12 +233,22 @@ function startFloat(el){
   floatRAF=requestAnimationFrame(loop);
 }
 
-/* FX (bursts + confetti rain + sparks) */
+/* FX with DPI-aware canvas so effects fill the entire frame */
 const Fx=(function(){
   const c=$('#fx'), ctx=c.getContext('2d');
-  let W=0,H=0,parts=[],raf;
-  function resize(){ W=c.width=c.offsetWidth; H=c.height=c.offsetHeight; }
-  window.addEventListener('resize',resize); resize();
+  let cssW=0, cssH=0, dpr=1, parts=[], raf;
+
+  function resize(){
+    const rect=c.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    cssW = rect.width; cssH = rect.height;
+    c.width  = Math.round(cssW * dpr);
+    c.height = Math.round(cssH * dpr);
+    c.style.width  = cssW + 'px';
+    c.style.height = cssH + 'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);  // draw using CSS pixel coords
+  }
+  window.addEventListener('resize', resize); resize();
 
   function push(p){ parts.push(p); if(!raf) loop(); }
 
@@ -317,7 +262,7 @@ const Fx=(function(){
     for(let r=0;r<rows;r++){
       const y = -10 - r*14;
       for(let i=0;i<perRow;i++){
-        const x = (i+Math.random())/perRow * W;
+        const x = (i+Math.random())/perRow * cssW;  // full canvas width
         const v = 1.5 + Math.random()*1.5;
         const col = (i%3===0)?'#ff79a8':(i%3===1)?'#ffffff':'#ffd400';
         push({x,y,vx:(Math.random()-.5)*0.6,vy:v,life:120+Math.random()*40,age:0,color:col,size:3,grav:0.01});
@@ -334,11 +279,10 @@ const Fx=(function(){
 
   function loop(){
     raf=requestAnimationFrame(loop);
-    ctx.clearRect(0,0,W,H);
+    ctx.clearRect(0,0,cssW,cssH);
     for(let i=parts.length-1;i>=0;i--){
       const p=parts[i];
-      p.age++;
-      p.x+=p.vx; p.y+=p.vy; p.vy+=p.grav||0.02;
+      p.age++; p.x+=p.vx; p.y+=p.vy; p.vy+=p.grav||0.02;
       const a=1 - p.age/p.life;
       if(a<=0){ parts.splice(i,1); continue; }
       ctx.globalAlpha=Math.max(0,a);
@@ -348,10 +292,13 @@ const Fx=(function(){
     }
     if(parts.length===0){ cancelAnimationFrame(raf); raf=0; }
   }
-  return { burst, confettiRain, sparksAround, resize };
+
+  function size(){ return {w:cssW, h:cssH, canvas:c}; }
+
+  return { burst, confettiRain, sparksAround, resize, size };
 })();
 
-/* ---------- App ---------- */
+/* -------- App -------- */
 const frame=$('#frame');
 const startPane=$('#startPane');
 const playerPane=$('#playerPane');
@@ -359,7 +306,6 @@ const quizPane=$('#quizPane');
 const titleTop=$('#titleTop');
 const optionsGrid=$('#optionsGrid');
 
-const dialog=$('#dialog');
 const dialogText=$('#dialogText');
 
 const floatCard=$('#floatCard');
@@ -377,7 +323,6 @@ let chosenPlayerSrc=null;
 let firstClicks={IUB:false,NSU:false,AIUB:false,BRAC:false};
 const correctKey='IUB';
 
-/* START -> PLAYER */
 $('#startBtn').addEventListener('click', async()=>{
   openDoors();
   startPane.classList.add('hide');
@@ -385,18 +330,15 @@ $('#startBtn').addEventListener('click', async()=>{
   await Typewriter.type(dialogText,"Choose your aesthetic",18);
 });
 
-/* PLAYER -> QUIZ + THEME */
 $$('.player').forEach(btn=>{
   btn.addEventListener('click', async()=>{
     chosenPlayerSrc=btn.dataset.src;
     const theme=btn.dataset.theme;
 
-    /* Clear both, then apply selected theme explicitly */
     frame.classList.remove('theme-player1','theme-player2');
     if(theme==='player1') frame.classList.add('theme-player1');
     if(theme==='player2') frame.classList.add('theme-player2');
 
-    // badge
     badgeImg.src=chosenPlayerSrc; badge.style.display='block';
 
     playerPane.classList.add('hide');
@@ -405,7 +347,6 @@ $$('.player').forEach(btn=>{
   });
 });
 
-/* QUIZ */
 $$('.option').forEach(btn=>{
   btn.addEventListener('click', async()=>{
     const key=btn.dataset.key;
@@ -425,48 +366,44 @@ $$('.option').forEach(btn=>{
       return;
     }
 
-    /* SUCCESS SEQUENCE */
-    // hide player badge immediately
-    badge.style.display='none';
-
-    // fade out quiz UI
-    optionsGrid.classList.add('faded');
+    /* SUCCESS */
+    badge.style.display='none';                 // hide top-left badge
+    optionsGrid.classList.add('faded');        // fade choices
     titleTop.classList.add('faded');
+    successTitle.style.display='block';        // show big title
 
-    // top big title
-    successTitle.style.display='block';
-
-    // center image now (full image)
     if(chosenPlayerSrc){
       floatImg.src=chosenPlayerSrc;
       floatCard.style.display='block';
       startFloat(floatCard);
-      // sparks around the card center
-      const r = floatCard.getBoundingClientRect();
-      const fr = frame.getBoundingClientRect();
-      const cx = r.left - fr.left + r.width/2;
-      const cy = r.top  - fr.top  + r.height/2;
-      Fx.sparksAround(cx, cy, 120);
     }
 
-    // fireworks at corners + full-width confetti rain
-    const fr = frame.getBoundingClientRect();
-    Fx.burst(30, fr.height-30, '#ff79a8', 150);
-    Fx.burst(fr.width-30, fr.height-30, '#ffd400', 150);
-    Fx.confettiRain(8, 42); // rains from full top width
+    // Use canvas CSS size so effects fill entire frame, across devices
+    const {w:W, h:H, canvas:cv} = Fx.size();
 
-    // dialog line
+    // Corner fireworks (both bottom corners)
+    Fx.burst(15, H-20, '#ff79a8', 160);
+    Fx.burst(W-15, H-20, '#ffd400', 160);
+
+    // Confetti rain across the WHOLE top width
+    Fx.confettiRain(8, 48);
+
+    // Sparks around the floating image center (convert rects to canvas coords)
+    const fc = floatCard.getBoundingClientRect();
+    const cvr = cv.getBoundingClientRect();
+    const cx = fc.left - cvr.left + fc.width/2;
+    const cy = fc.top  - cvr.top  + fc.height/2;
+    Fx.sparksAround(cx, cy, 120);
+
     await Typewriter.type(dialogText,"Congratulations, this is the first step to your dreams.",18);
 
-    // Optional end message
-    setTimeout(async ()=>{
+    setTimeout(async()=>{
       await Typewriter.backspace(dialogText,3000);
       setTimeout(()=>Typewriter.type(dialogText,"I love you",26),2000);
     },3000);
   });
 });
 
-/* Init */
 closeDoors();
 window.addEventListener('load', ()=>{ Fx.resize(); });
 </script>
