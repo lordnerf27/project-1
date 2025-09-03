@@ -1,72 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>VibeCode Retro App</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FINAL QUIZ</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
   :root{
     --bg-pale:#ffd9e6;
-    --frame-top:#ffe6f1;
-    --frame-bot:#ffd1e4;
     --ink:#231f20;
     --white:#fff;
+    --frame-top:#ffe6f1;
+    --frame-bot:#ffd1e4;
+    --curtain:#ffb3cd;
   }
-
-  /* ===== GLOBAL BG: show ONE enlarged image, no tiling ===== */
   body{
-    background-color:var(--bg-pale);
-    background-image:url('assets/output.png'); /* your uploaded file */
-    background-repeat:no-repeat;
-    background-position:center center;
-    background-size:cover;        /* <- one copy only */
-    background-attachment:fixed;
-    font-family:'VT323', ui-monospace, monospace;
+    font-family:'VT323',ui-monospace,monospace;
     color:var(--ink);
-    display:grid; place-items:center;
+    background:var(--bg-pale);
+    display:grid;place-items:center;
+    overflow:hidden;
+  }
+  /* one enlarged image, no seams; overscan a bit so no side gaps */
+  body::before{
+    content:"";
+    position:fixed; inset:-3vmax;
+    background: url('assets/output.png') center/cover no-repeat;
+    z-index:-1;
+    filter:none;
   }
 
-  /* ===== FRAME ===== */
   .frame{
-    width:min(94vw, 1150px);
+    width:min(95vw,1200px);
     aspect-ratio:16/9;
-    border-radius:20px;
+    border-radius:22px;
     border:10px solid var(--white);
     box-shadow:0 28px 60px rgba(0,0,0,.25), inset 0 0 0 6px #ffc3da;
     position:relative; overflow:hidden;
-    background:linear-gradient(to bottom, var(--frame-top), var(--frame-bot));
+    background:linear-gradient(to bottom,var(--frame-top),var(--frame-bot));
   }
-  /* subtle looping gif in the frame background */
+  /* subtle looping gif inside the frame, faint */
   .frame::after{
     content:""; position:absolute; inset:0;
-    background:url('assets/frame-bg.gif') center/55% auto no-repeat;
+    background:url('assets/frame-bg.gif') center/52% auto no-repeat;
     opacity:.18; pointer-events:none;
   }
 
-  /* Curtains (now BELOW the UI) */
+  /* Softer curtains */
   .curtain{
     position:absolute; top:0; bottom:0; width:55%;
-    background:repeating-linear-gradient(90deg,#ff89b8 0 7px,#ff6aa5 7px 14px);
-    box-shadow:inset 0 0 0 6px #ffb3cf, 0 0 36px rgba(0,0,0,.15);
-    transition:transform 1050ms cubic-bezier(.22,.9,.22,1);
-    z-index:4; /* < UI will sit ABOVE this */
+    z-index:4;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.15)) ,
+      repeating-linear-gradient(90deg, rgba(0,0,0,.06) 0 5px, transparent 5px 18px);
+    background-color:var(--curtain);
+    box-shadow:inset 0 0 0 5px rgba(255,255,255,.5), 0 10px 28px rgba(0,0,0,.18);
+    transition:transform 1100ms cubic-bezier(.22,.9,.22,1);
   }
   .curtain.left{left:0; transform:translateX(0)}
   .curtain.right{right:0; transform:translateX(0)}
   .frame.open .curtain.left{transform:translateX(-100%)}
   .frame.open .curtain.right{transform:translateX(100%)}
 
-  /* All interactive content sits above curtains */
-  .content{position:absolute; inset:0; display:grid; place-items:center; padding:18px; z-index:6}
-
+  .content{position:absolute; inset:0; display:grid; place-items:center; padding:20px; z-index:6}
   .panel{width:100%; max-width:960px; position:relative}
   h1,h2,p{margin:0}
   h1,h2{font-size:42px; letter-spacing:1px; text-shadow:0 2px 0 #fff8}
 
-  /* Start card */
   .card{
     background:#fff6;border:4px solid #ffd3e6;border-radius:14px;
     padding:18px 22px;text-align:center;box-shadow:0 8px 0 #e6aac4;
@@ -77,16 +79,18 @@
   .btn:active{transform:translateY(2px);box-shadow:0 2px 0 #e6aac4}
 
   /* Player select */
-  .players{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-top:14px}
-  .player{width:220px;aspect-ratio:1/1.1;border-radius:14px;overflow:hidden;
-          border:4px solid #ffd3e6;background:#fff;cursor:pointer;
-          box-shadow:0 6px 0 #e6aac4;transition:transform .12s ease}
+  .players{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  .player{
+    width:200px; aspect-ratio:3/4; border-radius:14px; overflow:hidden;
+    border:4px solid #ffd3e6; background:#fff; cursor:pointer;
+    box-shadow:0 6px 0 #e6aac4; transition:transform .12s ease
+  }
   .player:hover{transform:translateY(-3px)}
-  .player img{width:100%;height:100%;object-fit:cover;display:block}
+  .player img{width:100%;height:100%;object-fit:cover;object-position:center}
 
   /* Destination */
-  .top-title{position:absolute;left:0;right:0;top:34px;text-align:center;font-size:44px}
-  .grid{margin-top:120px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .top-title{position:absolute;left:0;right:0;top:22px;text-align:center;font-size:44px}
+  .grid{margin-top:168px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
   .option{padding:14px 16px;font-size:26px;text-align:center;background:#fff;
           border:4px solid #ffd3e6;border-radius:12px;box-shadow:0 5px 0 #e6aac4;cursor:pointer}
   .option:active{transform:translateY(2px);box-shadow:0 3px 0 #e6aac4}
@@ -112,14 +116,14 @@
   <div class="frame" id="frame">
     <canvas id="fx"></canvas>
 
-    <!-- visible curtains below UI -->
+    <!-- Softer curtains -->
     <div class="curtain left"></div>
     <div class="curtain right"></div>
 
     <div class="content" id="screen">
       <!-- START -->
       <div class="panel" id="startPane">
-        <div class="card">
+        <div class="card" style="max-width:720px;margin-inline:auto">
           <h1>Welcome</h1>
           <p>Click to start</p>
           <button class="btn" id="startBtn">Start</button>
@@ -166,11 +170,10 @@
   </div>
 
 <script>
-/* Shorthand */
+/* helpers */
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 
-/* Typing helpers */
 function typeText(el, text, speed=22){
   return new Promise(res=>{
     el.textContent=''; let i=0;
@@ -185,11 +188,11 @@ function backspaceText(el, totalMs=3000){
   });
 }
 
-/* Gentle float around center */
+/* Very gentle float */
 let floatRAF, floatT=0;
 function startFloat(el){
   cancelAnimationFrame(floatRAF);
-  const amp=24, spd=0.0018;
+  const amp=14, spd=0.0011;   // slower & smaller
   function loop(ts){
     floatT += spd*(ts||16);
     const dx=Math.sin(floatT*2)*amp;
@@ -205,13 +208,13 @@ const Fx = (function(){
   const c=$('#fx'), ctx=c.getContext('2d'); let W=0,H=0,parts=[],raf;
   function resize(){ W=c.width=c.offsetWidth; H=c.height=c.offsetHeight; }
   window.addEventListener('resize', resize); resize();
-  function burst(x,y,color='#ffec00',count=100){
+  function burst(x,y,color='#ffec00',count=120){
     for(let i=0;i<count;i++){
       const a=Math.random()*Math.PI*2, v=1+Math.random()*3;
       parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:60+Math.random()*40,age:0,color});
     } if(!raf) loop();
   }
-  function confetti(x,y,count=30){
+  function confetti(x,y,count=80){
     for(let i=0;i<count;i++){
       const a=-Math.PI/2+(Math.random()-.5)*.7, v=2+Math.random()*2;
       parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:70+Math.random()*30,age:0,color:i%2?'#ff79a8':'#fff'});
@@ -242,16 +245,17 @@ const floatImg=$('#floatImg');
 function showCurtains(){ frame.classList.remove('open'); }
 function openCurtains(){ frame.classList.add('open'); }
 
-/* Flow state */
+/* State */
 let chosenPlayerSrc=null;
 let firstClicks={IUB:false, NSU:false, AIUB:false, BRAC:false};
+const correctKey='IUB';
 
 /* START -> PLAYER */
 $('#startBtn').addEventListener('click', async ()=>{
-  openCurtains();                    // slide curtains
-  startPane.classList.add('hide');   // hide start
+  openCurtains();
+  startPane.classList.add('hide');
   playerPane.classList.remove('hide');
-  await typeText(dialogText,"Pick your player.",20);
+  await typeText(dialogText,"Choose your outfit.",20);
 });
 
 /* PLAYER -> QUIZ */
@@ -260,18 +264,18 @@ $$('.player').forEach(btn=>{
     chosenPlayerSrc = btn.dataset.src;
     playerPane.classList.add('hide');
     quizPane.classList.remove('hide');
-    await typeText(dialogText,"BOO! Where do you want to go?",20);
+    await typeText(dialogText,"Woohoo! Where do you want to go?",20);
   });
 });
 
 /* QUIZ */
-const correctKey='IUB';
 $$('.option').forEach(btn=>{
   btn.addEventListener('click', async ()=>{
     const key=btn.dataset.key;
     const first=!firstClicks[key]; firstClicks[key]=true;
 
     if(key!==correctKey){
+      // ensure round-1 vs round-2 messages don't repeat for same key
       let msg="";
       if(key==='NSU') msg = first ? "You're too broke for this." : "Ah, you miss me that much.";
       if(key==='AIUB') msg = first ? "Don't go there." : "Whoa, whoa, whoa, don't go there now, come on.";
@@ -291,11 +295,12 @@ $$('.option').forEach(btn=>{
       startFloat(floatCard);
     }
     const r=frame.getBoundingClientRect();
-    Fx.burst(30,r.height-30,'#ff79a8',130);
-    Fx.burst(r.width-30,r.height-30,'#ffd400',130);
-    Fx.confetti(r.width/2,r.height-40,80);
+    Fx.burst(30,r.height-30,'#ff79a8',140);
+    Fx.burst(r.width-30,r.height-30,'#ffd400',140);
+    Fx.confetti(r.width*0.25,r.height*0.2,70);
+    Fx.confetti(r.width*0.75,r.height*0.2,70);
 
-    // After ~3s backspace, then +2s type "I love you"
+    // Backspace after ~3s, then "I love you"
     setTimeout(async ()=>{
       await backspaceText(dialogText,3000);
       setTimeout(()=>typeText(dialogText,"I love you",28),2000);
@@ -303,8 +308,8 @@ $$('.option').forEach(btn=>{
   });
 });
 
-/* Initial state */
-showCurtains();                      // curtains closed
+/* Initial */
+showCurtains();
 window.addEventListener('load', ()=>window.dispatchEvent(new Event('resize')));
 </script>
 </body>
