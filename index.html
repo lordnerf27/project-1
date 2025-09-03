@@ -7,92 +7,97 @@
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
   :root{
-    --pink:#ffc0cb;            /* global bg pink */
-    --panel:#ffd6e8;           /* inside frame pink */
+    --pink:#ffc0cb;         /* global page pink */
+    --panel:#ffd6e8;        /* inner frame gradient start */
+    --panel2:#f7b2ce;       /* inner frame gradient end */
     --accent:#ff94c2;
     --ink:#222;
   }
-
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
+
+  /* GLOBAL BACKGROUND — same image twice so no gaps on extreme ratios */
   body{
     font-family:'VT323', monospace;
     color:var(--ink);
-    /* Single (non-repeating) background you uploaded */
     background-color:var(--pink);
-    background-image:url("assets/global-bg-full.jpg");
-    background-repeat:no-repeat;
-    background-size:cover;         /* use contain if you prefer full image always visible */
-    background-position:center;    /* adjust if you want to nudge the doodles */
+    background-image: url("assets/global-bg-full.jpg"), url("assets/global-bg-full.jpg");
+    background-repeat: no-repeat, no-repeat;
+    background-size: cover, cover;
+    background-position: top center, bottom center;
     overflow:hidden;
   }
 
-  /* Main frame */
+  /* MAIN FRAME */
   .frame{
     width:min(95vw,1200px);
     height:min(90vh,700px);
     position:absolute; inset:0; margin:auto;
     border:12px solid #fff; border-radius:20px;
     box-shadow:0 18px 50px rgba(0,0,0,.15);
-    background:radial-gradient(120% 120% at 50% 30%, var(--panel) 0%, #fbc2d7 70%, #f7b2ce 100%);
+    background:radial-gradient(120% 120% at 50% 30%, var(--panel) 0%, #fbc2d7 70%, var(--panel2) 100%);
     overflow:hidden;
   }
 
-  /* Curtains: visible fabric look */
+  /* faint background inside the frame */
+  .frame-bg{
+    position:absolute; inset:0; display:grid; place-items:center; z-index:1; pointer-events:none;
+  }
+  .frame-bg img{
+    width:min(60%, 520px); height:auto; opacity:.24; filter:saturate(120%);
+    border-radius:12px;
+  }
+
+  /* curtains */
+  .rod{ position:absolute; left:0; right:0; top:0; height:10px; background:rgba(0,0,0,.2); z-index:9 }
   .curtain{
     position:absolute; top:0; bottom:0; width:52%;
     background:
-      linear-gradient(90deg, rgba(255,255,255,.25) 0 8px, rgba(0,0,0,.08) 8px 16px) 0 0/32px 100%,
+      linear-gradient(90deg, rgba(255,255,255,.25) 0 10px, rgba(0,0,0,.08) 10px 20px) 0 0/30px 100%,
       linear-gradient(#ffadc9, #ff7fb4);
     box-shadow: inset 0 0 0 6px rgba(255,255,255,.35);
-    z-index:8;
-    transform:translateX(0);
+    z-index:8; transform:translateX(0);
     transition:transform 1200ms cubic-bezier(.2,.9,.1,1);
   }
-  .curtain.left{ left:0; }
-  .curtain.right{ right:0; }
-  .curtain.open.left{ transform:translateX(-100%); }
-  .curtain.open.right{ transform:translateX(100%); }
+  .curtain.left{ left:0 } .curtain.right{ right:0 }
+  .curtain.open.left{ transform:translateX(-100%) }
+  .curtain.open.right{ transform:translateX(100%) }
 
-  /* Curtain top rod */
-  .rod{ position:absolute; left:0; right:0; top:0; height:10px; background:rgba(0,0,0,.2); z-index:9 }
-
-  /* Start message */
+  /* start overlay */
   .center-msg{
     position:absolute; inset:0; display:grid; place-items:center;
-    z-index:10; user-select:none; cursor:pointer;
-    color:#fff; text-shadow:2px 2px 0 #000; font-size:48px;
+    z-index:10; user-select:none; cursor:pointer; color:#fff;
+    text-shadow:2px 2px 0 #000; font-size:48px;
   }
 
-  /* Bottom dialog */
+  /* bottom dialog */
   .dialog{
     position:absolute; left:0; right:0; bottom:0; z-index:7;
-    display:none; align-items:center; gap:10px;
+    display:none; align-items:center; gap:12px;
     padding:10px 14px; font-size:24px; color:#fff;
-    background:rgba(0,0,0,.25); border-top:3px solid var(--accent);
+    background:rgba(0,0,0,.28); border-top:3px solid var(--accent);
     backdrop-filter:saturate(120%) blur(1px);
   }
   .dialog img{ width:44px; height:44px; border-radius:50%; border:3px solid #fff }
 
-  /* Player select */
-  .player-stage{ position:absolute; inset:0; display:grid; place-items:center }
-  .player-card{
-    text-align:center;
-  }
-  .player-card h2{ font-size:42px; margin:0 0 12px }
-  .player-card img{
-    width:240px; max-width:60vw; height:auto;
+  /* player select */
+  .stage{ position:absolute; inset:0; display:grid; place-items:center; z-index:5 }
+  .pick-wrap{ text-align:center }
+  .pick-wrap h2{ font-size:42px; margin:0 0 10px }
+  .pick-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:18px; align-items:end }
+  .pick-grid figure{ margin:0; }
+  .pick-grid img{
+    width:min(260px, 40vw); height:auto; cursor:pointer;
     border:6px solid #fff; border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,.2);
-    cursor:pointer;
   }
 
-  /* Destination panel */
+  /* destination */
   .panel{
     position:absolute; left:50%; top:50%;
-    transform:translate(-50%,-44%); /* slightly above true center to leave dialog space */
-    width:100%; max-width:820px; text-align:center;
+    transform:translate(-50%,-48%);  /* title higher from the options */
+    width:100%; max-width:820px; text-align:center; z-index:5;
   }
-  .panel h2{ font-size:40px; margin:0 0 12px }
+  .panel h2{ font-size:40px; margin:0 0 16px }
   .grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px }
   .grid button{
     padding:12px; font-size:28px; cursor:pointer; color:var(--ink);
@@ -101,25 +106,21 @@
   }
   .grid button:active{ transform:translateY(1px); box-shadow:0 1px 0 rgba(0,0,0,.12) }
 
-  /* Celebration card */
-  .celebrate{
-    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    width:220px; z-index:20;
-  }
+  /* celebration */
+  .celebrate{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:220px; z-index:20 }
   .celebrate img{ width:100%; border:6px solid #fff; border-radius:12px; display:block }
-
-  /* Confetti canvas */
   canvas.fx{ position:absolute; left:0; bottom:0; width:100%; height:100%; pointer-events:none; z-index:19 }
 </style>
 </head>
 <body>
   <div class="frame" id="frame">
+    <div class="frame-bg"><img src="assets/frame-bg-gif.jpg" alt=""></div>
+
     <div class="rod"></div>
     <div class="curtain left"  id="curtainLeft"></div>
     <div class="curtain right" id="curtainRight"></div>
     <div class="center-msg" id="startMsg">Click to start</div>
 
-    <!-- Dialog (shows from player step onwards) -->
     <div class="dialog" id="dialog">
       <img src="assets/avatar.jpg" alt="Admin">
       <span id="dialogText"></span>
@@ -134,6 +135,9 @@ const curtainRight= document.getElementById('curtainRight');
 const dialog      = document.getElementById('dialog');
 const dialogText  = document.getElementById('dialogText');
 
+let selectedPlayerSrc = "assets/player-profile.jpg"; // default
+
+/* Start -> open curtains */
 startMsg.addEventListener('click', () => {
   startMsg.style.display = 'none';
   curtainLeft.classList.add('open');
@@ -141,26 +145,34 @@ startMsg.addEventListener('click', () => {
   setTimeout(showPlayerSelect, 1200);
 });
 
-/* ---------- PLAYER PICK ---------- */
+/* Choose your character (two choices) */
 function showPlayerSelect(){
   dialog.style.display = 'flex';
   dialogText.textContent = 'Pick your player!';
+
   const stage = document.createElement('div');
-  stage.className = 'player-stage';
+  stage.className = 'stage';
   stage.innerHTML = `
-    <div class="player-card">
+    <div class="pick-wrap">
       <h2>Choose your character</h2>
-      <img src="assets/player-profile.jpg" alt="Player" id="playerImg">
+      <div class="pick-grid">
+        <figure><img src="assets/player-profile.jpg"  alt="Player 1" id="p1"></figure>
+        <figure><img src="assets/player-profile-2.jpg" alt="Player 2" id="p2"></figure>
+      </div>
     </div>`;
   frame.appendChild(stage);
 
-  stage.querySelector('#playerImg').onclick = () => {
-    stage.remove();
-    showDestination();
-  };
+  stage.querySelector('#p1').onclick = () => choose('assets/player-profile.jpg', stage);
+  stage.querySelector('#p2').onclick = () => choose('assets/player-profile-2.jpg', stage);
 }
 
-/* ---------- DESTINATION ---------- */
+function choose(src, stage){
+  selectedPlayerSrc = src;
+  stage.remove();
+  showDestination();
+}
+
+/* Destination screen */
 function showDestination(){
   dialogText.textContent = 'WHOOO! Where do you want to go?';
 
@@ -176,46 +188,55 @@ function showDestination(){
     </div>`;
   frame.appendChild(panel);
 
-  let aiubClicks = 0;
+  const picks = { IUB:0, NSU:0, AIUB:0, BRAC:0 };
 
   panel.querySelectorAll('button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const pick = btn.dataset.opt;
-      switch(pick){
-        case 'AIUB':
-          aiubClicks++;
-          if(aiubClicks===1){
-            dialogText.textContent = "First attempt didn't work. Try again.";
-          }else{
-            dialogText.textContent = "Congratulations! This is the first step to your dreams!";
-            setTimeout(()=>{ panel.remove(); celebrate(); }, 700);
-          }
-          break;
-        case 'NSU':
-          dialogText.textContent = "You're too broke for this.";
-          break;
-        case 'BRAC':
-          dialogText.textContent = "You're scared of presentations.";
-          break;
-        default: // IUB
-          dialogText.textContent = "Whoops, not this one.";
+      const k = btn.dataset.opt;
+      picks[k]++;
+
+      // IUB is the correct route both times
+      if(k === 'IUB'){
+        if(picks.IUB === 1){
+          dialogText.textContent = "First attempt didn't work, try again.";
+        }else{
+          dialogText.textContent = "Congratulations! This is the first step to your dreams!";
+          setTimeout(()=>{ panel.remove(); celebrate(); }, 700);
+        }
+        return;
+      }
+
+      // Others: first and second messages
+      if(k === 'NSU'){
+        dialogText.textContent = (picks.NSU === 1)
+          ? "You're too broke for this."
+          : "Ah you missed me that much.";
+      }
+      if(k === 'AIUB'){
+        dialogText.textContent = (picks.AIUB === 1)
+          ? "Don't go there."
+          : "Whoa, whoa, whoa, don't go there now, come on.";
+      }
+      if(k === 'BRAC'){
+        dialogText.textContent = (picks.BRAC === 1)
+          ? "Whoa, I thought you were scared of presentations."
+          : "Damn, I don't think you have the money for this.";
       }
     });
   });
 }
 
-/* ---------- CELEBRATION ---------- */
+/* Celebration: slower gentle sway + confetti */
 function celebrate(){
-  // Player card gentle drift (slower & calmer)
   const card = document.createElement('div');
   card.className = 'celebrate';
-  card.innerHTML = `<img src="assets/player-profile.jpg" alt="Player">`;
+  card.innerHTML = `<img src="${selectedPlayerSrc}" alt="Winner">`;
   frame.appendChild(card);
 
   const cx = frame.clientWidth/2, cy = frame.clientHeight/2;
-  const ampX = Math.min(50, frame.clientWidth*0.045);
-  const ampY = Math.min(32, frame.clientHeight*0.045);
-  let x = cx, y = cy, vx = 0.35, vy = 0.25; // slower speeds
+  const ampX = Math.min(48, frame.clientWidth*0.04);
+  const ampY = Math.min(30, frame.clientHeight*0.04);
+  let x = cx, y = cy, vx = 0.25, vy = 0.18;  // slower & calmer
 
   (function drift(){
     x += vx; y += vy;
@@ -229,7 +250,7 @@ function celebrate(){
   confetti();
 }
 
-/* Simple confetti fall */
+/* Confetti */
 function confetti(){
   const c = document.createElement('canvas');
   c.className = 'fx';
@@ -243,8 +264,8 @@ function confetti(){
     x: Math.random()*c.width,
     y: -Math.random()*c.height,
     w: 8, h: 14,
-    vy: 1.4 + Math.random()*2.2,
-    vx: (Math.random()*1.2)-0.6,
+    vy: 1.2 + Math.random()*2.0,
+    vx: (Math.random()*1.0)-0.5,
     col: `hsl(${Math.random()*360},100%,55%)`
   }));
 
