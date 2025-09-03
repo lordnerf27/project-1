@@ -1,23 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Final Quiz</title>
-<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+
+<!-- Gameboy-ish fonts -->
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+
 <style>
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
   :root{
+    /* base palette (Player 1-ish) */
     --bg-pale:#ffd9e6;
     --ink:#231f20;
     --white:#fff;
+
+    /* theme vars (overridden by .theme-player2) */
     --frame-top:#ffe6f1;
     --frame-bot:#ffd1e4;
-    --curtain:#ffb3cd;
+    --frame-border:#ffc3da;
+    --gif-opacity:.18;
+
+    --dialog-bg:#b68aa5d0;
+    --dialog-border:#ffc3da;
+    --dialog-fg:#ffffff;
   }
+
+  /* Global background: single enlarged image with overscan so no edge lines */
   body{
-    font-family:'VT323',ui-monospace,monospace;
+    font-family:'VT323', ui-monospace, monospace;
     color:var(--ink);
     background:var(--bg-pale);
     display:grid;place-items:center;
@@ -25,125 +38,174 @@
   }
   body::before{
     content:"";
-    position:fixed; inset:-3vmax;
-    background: url('assets/output.png') center/cover no-repeat;
+    position:fixed; inset:-3vmax;      /* overscan */
+    background:url('assets/output.png') center/cover no-repeat;
     z-index:-1;
   }
 
+  /* Frame with themeable gradient + border */
   .frame{
     width:min(95vw,1200px);
     aspect-ratio:16/9;
     border-radius:22px;
     border:10px solid var(--white);
-    box-shadow:0 28px 60px rgba(0,0,0,.25), inset 0 0 0 6px #ffc3da;
+    box-shadow:0 28px 60px rgba(0,0,0,.25), inset 0 0 0 6px var(--frame-border);
     position:relative; overflow:hidden;
-    background:linear-gradient(to bottom,var(--frame-top),var(--frame-bot));
-    transition:background 0.8s ease-in-out;
+    background:linear-gradient(to bottom, var(--frame-top), var(--frame-bot));
+    transition:
+      background 0.8s ease-in-out,
+      box-shadow 0.8s ease-in-out;
   }
-  /* theme variations */
-  .frame.theme-player1{background:linear-gradient(to bottom,#ffb6c1,#ffe4e1);}
-  .frame.theme-player2{background:linear-gradient(to bottom,#8b0000,#280000);}
-  
+  /* Looping GIF kept, opacity themeable */
   .frame::after{
-    content:""; position:absolute; inset:0;
+    content:"";
+    position:absolute; inset:0;
     background:url('assets/frame-bg.gif') center/52% auto no-repeat;
-    opacity:.18; pointer-events:none;
+    opacity:var(--gif-opacity);
+    pointer-events:none;
   }
 
-  .curtain{
+  /* THEME: Player 2 (dimmer/darker + black chrome) */
+  .theme-player2{
+    --frame-top:#3a0c15;
+    --frame-bot:#120608;
+    --frame-border:#111;
+    --gif-opacity:.12;
+
+    --dialog-bg:#141414c0;
+    --dialog-border:#111;
+    --dialog-fg:#ffffff;
+  }
+
+  /* Sliding doors (softer than candy curtains) */
+  .door{
     position:absolute; top:0; bottom:0; width:55%;
     z-index:4;
-    background:linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.15)),
-               repeating-linear-gradient(90deg, rgba(0,0,0,.06) 0 5px, transparent 5px 18px);
-    background-color:var(--curtain);
+    /* subtle panel texture */
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.08)),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 8px, transparent 8px 20px);
+    background-color:#ffb3cd;
     box-shadow:inset 0 0 0 5px rgba(255,255,255,.5), 0 10px 28px rgba(0,0,0,.18);
     transition:transform 1100ms cubic-bezier(.22,.9,.22,1);
   }
-  .curtain.left{left:0; transform:translateX(0)}
-  .curtain.right{right:0; transform:translateX(0)}
-  .frame.open .curtain.left{transform:translateX(-100%)}
-  .frame.open .curtain.right{transform:translateX(100%)}
+  .door.left{left:0; transform:translateX(0)}
+  .door.right{right:0; transform:translateX(0)}
+  .frame.open .door.left{transform:translateX(-100%)}
+  .frame.open .door.right{transform:translateX(100%)}
 
   .content{position:absolute; inset:0; display:grid; place-items:center; padding:20px; z-index:6}
   .panel{width:100%; max-width:960px; position:relative}
-  h1,h2,p{margin:0}
-  h1,h2{font-size:42px; letter-spacing:1px; text-shadow:0 2px 0 #fff8}
+
+  /* Headings: more “entering game” drama, but subtle */
+  h1{font: 700 36px 'Press Start 2P', monospace; letter-spacing:1px; margin:0 0 8px; text-shadow:0 2px 0 #fff8}
+  h2{font: 700 28px 'Press Start 2P', monospace; letter-spacing:1px; margin:0 0 8px; text-shadow:0 2px 0 #fff8}
+  p{margin:0}
 
   .card{
-    background:#fff6;border:4px solid #ffd3e6;border-radius:14px;
-    padding:18px 22px;text-align:center;box-shadow:0 8px 0 #e6aac4;
+    background:#fff6;border:4px solid var(--frame-border);border-radius:14px;
+    padding:18px 22px;text-align:center;box-shadow:0 8px 0 rgba(0,0,0,.12);
     backdrop-filter: blur(1px);
   }
-  .btn{cursor:pointer;margin-top:10px;padding:10px 18px;background:#fff;
-       border:3px solid #ffc2da;border-radius:10px;box-shadow:0 4px 0 #e6aac4}
-  .btn:active{transform:translateY(2px);box-shadow:0 2px 0 #e6aac4}
+  .btn{
+    cursor:pointer;margin-top:12px;padding:12px 18px;background:#fff;
+    border:3px solid var(--frame-border);border-radius:10px;
+    box-shadow:0 4px 0 rgba(0,0,0,.12);
+    font: 700 18px 'Press Start 2P', monospace;
+  }
+  .btn:active{transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.12)}
 
+  /* Player select */
   .players{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:14px}
   .player{
-    width:200px; aspect-ratio:3/4; border-radius:14px; overflow:hidden;
-    border:4px solid #ffd3e6; background:#fff; cursor:pointer;
-    box-shadow:0 6px 0 #e6aac4; transition:transform .12s ease
+    width:190px; aspect-ratio:3/4; border-radius:14px; overflow:hidden;
+    border:4px solid var(--frame-border); background:#fff; cursor:pointer;
+    box-shadow:0 6px 0 rgba(0,0,0,.12); transition:transform .12s ease
   }
   .player:hover{transform:translateY(-3px)}
   .player img{width:100%;height:100%;object-fit:cover;object-position:center}
 
-  .top-title{position:absolute;left:0;right:0;top:22px;text-align:center;font-size:44px}
-  .grid{margin-top:168px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-  .option{padding:14px 16px;font-size:26px;text-align:center;background:#fff;
-          border:4px solid #ffd3e6;border-radius:12px;box-shadow:0 5px 0 #e6aac4;cursor:pointer}
-  .option:active{transform:translateY(2px);box-shadow:0 3px 0 #e6aac4}
+  /* Destination title well above buttons */
+  .top-title{
+    position:absolute; left:0; right:0; top:18px; text-align:center;
+    font: 700 26px 'Press Start 2P', monospace;
+  }
+  .grid{
+    margin-top:172px; display:grid; grid-template-columns:repeat(2,1fr); gap:16px;
+  }
+  .option{
+    padding:14px 16px; font-size:26px; text-align:center; background:#fff;
+    border:4px solid var(--frame-border); border-radius:12px;
+    box-shadow:0 5px 0 rgba(0,0,0,.12); cursor:pointer
+  }
+  .option:active{transform:translateY(2px); box-shadow:0 3px 0 rgba(0,0,0,.12)}
 
-  .dialog{position:absolute;left:16px;right:16px;bottom:16px;z-index:7;
-          background:#b68aa5d0;border:3px solid #ffc3da;border-radius:12px;
-          padding:10px 14px;display:flex;align-items:center;gap:10px;
-          color:#fff;text-shadow:0 1px 0 #0006;font-size:24px}
-  .dialog img{width:36px;height:36px;object-fit:cover;border-radius:8px;border:2px solid #ffd3e6}
+  /* Dialog (theme-aware) */
+  .dialog{
+    position:absolute; left:16px; right:16px; bottom:16px; z-index:7;
+    background:var(--dialog-bg); border:3px solid var(--dialog-border); border-radius:12px;
+    padding:10px 14px; display:flex; align-items:center; gap:10px;
+    color:var(--dialog-fg); text-shadow:0 1px 0 #0006; font-size:24px
+  }
+  .dialog img{width:36px;height:36px;object-fit:cover;border-radius:8px;border:2px solid var(--dialog-border)}
 
-  .floatCard{position:absolute;left:50%;top:50%;width:220px;aspect-ratio:1/1.1;
-             transform:translate(-50%,-50%);border-radius:14px;overflow:hidden;
-             border:4px solid #ffd3e6;display:none;z-index:8;background:#fff;
-             box-shadow:0 8px 30px rgba(0,0,0,.25)}
-  canvas#fx{position:absolute;inset:0;z-index:7;pointer-events:none}
-  .hide{display:none}
+  /* Success floating card (gentle) */
+  .floatCard{
+    position:absolute; left:50%; top:50%;
+    width:220px; aspect-ratio:1/1.1;
+    transform:translate(-50%,-50%);
+    border-radius:14px; overflow:hidden;
+    border:4px solid var(--frame-border); display:none; z-index:8; background:#fff;
+    box-shadow:0 8px 30px rgba(0,0,0,.25)
+  }
+  canvas#fx{position:absolute; inset:0; z-index:7; pointer-events:none}
 
-  /* avatar badge top-left */
+  /* Selected player badge (top-left) */
   .badge{
-    position:absolute;top:12px;left:12px;z-index:8;
-    width:64px;height:64px;border:3px solid #ffd3e6;border-radius:12px;
-    background:#fff;overflow:hidden;display:none
+    position:absolute; top:12px; left:12px; z-index:8;
+    width:64px; height:64px; border:3px solid var(--frame-border); border-radius:10px;
+    background:#fff; overflow:hidden; display:none;
+    image-rendering: pixelated;
   }
   .badge img{width:100%;height:100%;object-fit:cover}
+
+  .hide{display:none}
 </style>
 </head>
 <body>
   <div class="frame" id="frame">
     <canvas id="fx"></canvas>
-    <div class="curtain left"></div>
-    <div class="curtain right"></div>
+
+    <!-- Sliding doors -->
+    <div class="door left"></div>
+    <div class="door right"></div>
 
     <div class="content" id="screen">
+      <!-- START -->
       <div class="panel" id="startPane">
-        <div class="card">
-          <h1>Welcome</h1>
-          <p>Click to start</p>
-          <button class="btn" id="startBtn">Start</button>
+        <div class="card" style="max-width:760px;margin-inline:auto">
+          <h1>WELCOME</h1>
+          <p style="font:700 16px 'Press Start 2P', monospace;opacity:.85">Click to start</p>
+          <button class="btn" id="startBtn">START</button>
         </div>
       </div>
 
+      <!-- PLAYER SELECT -->
       <div class="panel hide" id="playerPane">
         <div class="card">
           <h2>Pick your player</h2>
           <div class="players">
-            <button class="player" data-src="assets/player-profile.jpg" data-theme="player1">
+            <button class="player" data-src="assets/player-profile.jpg" data-theme="player1" title="PlayerProfile">
               <img src="assets/player-profile.jpg" alt="Player 1">
             </button>
-            <button class="player" data-src="assets/player-profile-2.jpg" data-theme="player2">
+            <button class="player" data-src="assets/player-profile-2.jpg" data-theme="player2" title="PlayerProfile2">
               <img src="assets/player-profile-2.jpg" alt="Player 2">
             </button>
           </div>
         </div>
       </div>
 
+      <!-- DESTINATION -->
       <div class="panel hide" id="quizPane">
         <div class="top-title">Choose your destination!</div>
         <div class="grid">
@@ -160,92 +222,191 @@
 
     <div class="dialog" id="dialog">
       <img src="assets/avatar.jpg" alt="avatar">
-      <div id="dialogText">Click Start to begin.</div>
+      <div id="dialogText">Click START to begin.</div>
     </div>
   </div>
 
 <script>
-const $ = s=>document.querySelector(s);
-const $$= s=>document.querySelectorAll(s);
-function typeText(el, text, speed=22){
-  return new Promise(res=>{
-    el.textContent=''; let i=0;
-    const t=setInterval(()=>{ el.textContent+=text[i++]||''; if(i>text.length){clearInterval(t);res();}},speed);
-  });
-}
-function backspaceText(el, totalMs=3000){
-  return new Promise(res=>{
-    const full=el.textContent; let i=full.length;
-    const step=Math.max(12, Math.floor(totalMs/Math.max(1,full.length)));
-    const t=setInterval(()=>{ el.textContent=full.slice(0,--i); if(i<=0){clearInterval(t);res();}},step);
-  });
-}
+/* -------- Utilities -------- */
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+/* Typewriter controller to prevent overlaps */
+const Typewriter = (function(){
+  let timer = null;
+  function stop(){ if(timer){ clearInterval(timer); timer = null; } }
+  async function type(el, text, speed=22){
+    stop();
+    el.textContent = '';
+    return new Promise(res=>{
+      let i=0;
+      timer = setInterval(()=>{
+        el.textContent += text[i++] || '';
+        if(i>text.length){ stop(); res(); }
+      }, speed);
+    });
+  }
+  async function backspace(el, totalMs=3000){
+    stop();
+    const full = el.textContent;
+    let i = full.length;
+    const step = Math.max(12, Math.floor(totalMs/Math.max(1, full.length)));
+    return new Promise(res=>{
+      timer = setInterval(()=>{
+        el.textContent = full.slice(0, --i);
+        if(i<=0){ stop(); res(); }
+      }, step);
+    });
+  }
+  return { type, backspace, stop };
+})();
+
+/* Very gentle float (no erratic jumps) */
 let floatRAF, floatT=0;
 function startFloat(el){
   cancelAnimationFrame(floatRAF);
-  const amp=14, spd=0.0011;
-  function loop(ts){
-    floatT += spd*(ts||16);
-    const dx=Math.sin(floatT*2)*amp;
-    const dy=Math.cos(floatT*1.6)*amp;
-    el.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-    floatRAF=requestAnimationFrame(loop);
+  const amp=10, spd=0.0009;   // slower + smaller
+  let last = performance.now();
+  function loop(now){
+    const dt = Math.min(32, now - last); last = now;
+    floatT += spd * dt;
+    const dx = Math.sin(floatT*2) * amp;
+    const dy = Math.cos(floatT*1.6) * amp;
+    el.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    floatRAF = requestAnimationFrame(loop);
   }
-  loop();
+  floatRAF = requestAnimationFrame(loop);
 }
-const frame=$('#frame'), startPane=$('#startPane'), playerPane=$('#playerPane'), quizPane=$('#quizPane');
-const dialogText=$('#dialogText'), floatCard=$('#floatCard'), floatImg=$('#floatImg');
-const badge=$('#playerBadge'), badgeImg=$('#badgeImg');
-function showCurtains(){frame.classList.remove('open');}
-function openCurtains(){frame.classList.add('open');}
-let chosenPlayerSrc=null, firstClicks={IUB:false,NSU:false,AIUB:false,BRAC:false};
-const correctKey='IUB';
-$('#startBtn').addEventListener('click', async()=>{
-  openCurtains();
+
+/* Simple fireworks + confetti */
+const Fx = (function(){
+  const c = $('#fx'), ctx = c.getContext('2d');
+  let W=0,H=0, parts=[], raf;
+  function resize(){ W=c.width=c.offsetWidth; H=c.height=c.offsetHeight; }
+  window.addEventListener('resize', resize); resize();
+
+  function burst(x,y,color='#ffec00',count=120){
+    for(let i=0;i<count;i++){
+      const a=Math.random()*Math.PI*2, v=1+Math.random()*3;
+      parts.push({x,y, vx:Math.cos(a)*v, vy:Math.sin(a)*v, life:60+Math.random()*40, age:0, color});
+    } if(!raf) loop();
+  }
+  function confetti(x,y,count=90){
+    for(let i=0;i<count;i++){
+      const a=-Math.PI/2 + (Math.random()-0.5)*0.7, v=2+Math.random()*2;
+      const col = i%3===0? '#ff79a8' : (i%3===1? '#ffffff' : '#ffd400');
+      parts.push({x,y, vx:Math.cos(a)*v, vy:Math.sin(a)*v, life:80+Math.random()*40, age:0, color:col});
+    } if(!raf) loop();
+  }
+  function loop(){
+    raf = requestAnimationFrame(loop);
+    ctx.clearRect(0,0,W,H);
+    for(let i=parts.length-1;i>=0;i--){
+      const p = parts[i];
+      p.age++; p.x+=p.vx; p.y+=p.vy; p.vy += 0.03;
+      const a = 1 - p.age/p.life;
+      if(a<=0){ parts.splice(i,1); continue; }
+      ctx.globalAlpha = Math.max(0,a);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, 3, 3);
+      ctx.globalAlpha = 1;
+    }
+    if(parts.length===0){ cancelAnimationFrame(raf); raf = 0; }
+  }
+  return { burst, confetti, resize };
+})();
+
+/* -------- App flow -------- */
+const frame       = $('#frame');
+const startPane   = $('#startPane');
+const playerPane  = $('#playerPane');
+const quizPane    = $('#quizPane');
+const dialog      = $('#dialog');
+const dialogText  = $('#dialogText');
+const floatCard   = $('#floatCard');
+const floatImg    = $('#floatImg');
+const badge       = $('#playerBadge');
+const badgeImg    = $('#badgeImg');
+
+function openDoors(){ frame.classList.add('open'); }
+function closeDoors(){ frame.classList.remove('open'); }
+
+let chosenPlayerSrc = null;
+let firstClicks = { IUB:false, NSU:false, AIUB:false, BRAC:false };
+const correctKey = 'IUB';
+
+/* START -> PLAYER */
+$('#startBtn').addEventListener('click', async ()=>{
+  openDoors();
   startPane.classList.add('hide');
   playerPane.classList.remove('hide');
-  await typeText(dialogText,"Choose your aesthetic",20);
+  await Typewriter.type(dialogText, "Choose your aesthetic", 18);
 });
+
+/* PLAYER -> QUIZ (+theme swap, smooth) */
 $$('.player').forEach(btn=>{
-  btn.addEventListener('click', async()=>{
-    chosenPlayerSrc=btn.dataset.src;
-    const theme=btn.dataset.theme;
+  btn.addEventListener('click', async ()=>{
+    chosenPlayerSrc = btn.dataset.src;
+    const theme = btn.dataset.theme;
     frame.classList.remove('theme-player1','theme-player2');
-    if(theme==='player1') frame.classList.add('theme-player1');
-    if(theme==='player2') frame.classList.add('theme-player2');
-    badgeImg.src=chosenPlayerSrc;
-    badge.style.display='block';
+    if(theme==='player1'){ frame.classList.add('theme-player1'); }
+    if(theme==='player2'){ frame.classList.add('theme-player2'); }
+
+    // Show chosen player badge
+    badgeImg.src = chosenPlayerSrc;
+    badge.style.display = 'block';
+
     playerPane.classList.add('hide');
     quizPane.classList.remove('hide');
-    await typeText(dialogText,"Woohoo! Where do you want to go?",20);
+    await Typewriter.type(dialogText, "Woohoo! Where do you want to go?", 18);
   });
 });
+
+/* QUIZ */
 $$('.option').forEach(btn=>{
-  btn.addEventListener('click', async()=>{
-    const key=btn.dataset.key;
-    const first=!firstClicks[key]; firstClicks[key]=true;
-    if(key!==correctKey){
+  btn.addEventListener('click', async ()=>{
+    const key = btn.dataset.key;
+    const first = !firstClicks[key];
+    firstClicks[key] = true;
+
+    if(key !== correctKey){
       let msg="";
-      if(key==='NSU') msg=first?"You're too broke for this.":"Ah, you miss me that much.";
-      if(key==='AIUB') msg=first?"Don't go there.":"Whoa, whoa, whoa, don't go there now, come on.";
-      if(key==='BRAC') msg=first?"Whoa, I thought you were scared of presentations.":"Damn, I don't think you have the money for this.";
-      await typeText(dialogText,msg,20);
+      if(key==='NSU')  msg = first ? "You're too broke for this." : "Ah, you miss me that much.";
+      if(key==='AIUB') msg = first ? "Don't go there." : "Whoa, whoa, whoa, don't go there now, come on.";
+      if(key==='BRAC') msg = first ? "Whoa, I thought you were scared of presentations." : "Damn, I don't think you have the money for this.";
+      await Typewriter.type(dialogText, msg, 18);
       return;
     }
-    if(first){await typeText(dialogText,"First attempt didn't work, try again!",20);return;}
-    await typeText(dialogText,"Congratulations, this is the first step to your dreams.",20);
+
+    if(first){ await Typewriter.type(dialogText, "First attempt didn't work, try again!", 18); return; }
+
+    // Success
+    await Typewriter.type(dialogText, "Congratulations, this is the first step to your dreams.", 18);
+
     if(chosenPlayerSrc){
-      floatImg.src=chosenPlayerSrc;
-      floatCard.style.display='block';
+      floatImg.src = chosenPlayerSrc;
+      floatCard.style.display = 'block';
       startFloat(floatCard);
     }
-    setTimeout(async()=>{
-      await backspaceText(dialogText,3000);
-      setTimeout(()=>typeText(dialogText,"I love you",28),2000);
-    },3000);
+
+    // Fireworks + confetti from corners & top
+    const r = frame.getBoundingClientRect();
+    Fx.burst(30, r.height-30, '#ff79a8', 140);
+    Fx.burst(r.width-30, r.height-30, '#ffd400', 140);
+    Fx.confetti(r.width*0.25, r.height*0.18, 80);
+    Fx.confetti(r.width*0.75, r.height*0.18, 80);
+
+    // Backspace after ~3s, then "I love you" after +2s
+    setTimeout(async ()=>{
+      await Typewriter.backspace(dialogText, 3000);
+      setTimeout(()=>Typewriter.type(dialogText, "I love you", 26), 2000);
+    }, 3000);
   });
 });
-showCurtains();
+
+/* Init */
+closeDoors();
+window.addEventListener('load', ()=>{ Fx.resize(); });
 </script>
 </body>
 </html>
