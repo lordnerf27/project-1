@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CONGRATULATIONS</title>
+<title>VibeCode Retro App</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box}
@@ -14,23 +14,22 @@
     --frame-bot:#ffd1e4;
     --ink:#231f20;
     --white:#fff;
-    --accent:#ff79a8;
   }
 
-  /* === GLOBAL BACKGROUND: a single enlarged image, no repeat === */
+  /* ===== GLOBAL BG: show ONE enlarged image, no tiling ===== */
   body{
     background-color:var(--bg-pale);
-    background-image:url('assets/output.png'); /* your uploaded image */
+    background-image:url('assets/output.png'); /* your uploaded file */
     background-repeat:no-repeat;
     background-position:center center;
-    background-size:cover;        /* enlarge to fill; keeps one copy only */
-    background-attachment:fixed;  /* feels solid while content moves */
+    background-size:cover;        /* <- one copy only */
+    background-attachment:fixed;
     font-family:'VT323', ui-monospace, monospace;
     color:var(--ink);
     display:grid; place-items:center;
   }
 
-  /* === GAME FRAME === */
+  /* ===== FRAME ===== */
   .frame{
     width:min(94vw, 1150px);
     aspect-ratio:16/9;
@@ -40,32 +39,39 @@
     position:relative; overflow:hidden;
     background:linear-gradient(to bottom, var(--frame-top), var(--frame-bot));
   }
-  /* looping gif, faded */
+  /* subtle looping gif in the frame background */
   .frame::after{
     content:""; position:absolute; inset:0;
     background:url('assets/frame-bg.gif') center/55% auto no-repeat;
     opacity:.18; pointer-events:none;
   }
 
-  /* Curtains */
-  .curtain{position:absolute;top:0;bottom:0;width:55%;z-index:6;
+  /* Curtains (now BELOW the UI) */
+  .curtain{
+    position:absolute; top:0; bottom:0; width:55%;
     background:repeating-linear-gradient(90deg,#ff89b8 0 7px,#ff6aa5 7px 14px);
     box-shadow:inset 0 0 0 6px #ffb3cf, 0 0 36px rgba(0,0,0,.15);
-    transition:transform 1050ms cubic-bezier(.22,.9,.22,1);}
-  .curtain.left{left:0;transform:translateX(0)}
-  .curtain.right{right:0;transform:translateX(0)}
+    transition:transform 1050ms cubic-bezier(.22,.9,.22,1);
+    z-index:4; /* < UI will sit ABOVE this */
+  }
+  .curtain.left{left:0; transform:translateX(0)}
+  .curtain.right{right:0; transform:translateX(0)}
   .frame.open .curtain.left{transform:translateX(-100%)}
   .frame.open .curtain.right{transform:translateX(100%)}
 
-  .content{position:absolute; inset:0; display:grid; place-items:center; padding:18px}
-  .panel{width:100%; max-width:960px; position:relative; z-index:5}
+  /* All interactive content sits above curtains */
+  .content{position:absolute; inset:0; display:grid; place-items:center; padding:18px; z-index:6}
+
+  .panel{width:100%; max-width:960px; position:relative}
   h1,h2,p{margin:0}
   h1,h2{font-size:42px; letter-spacing:1px; text-shadow:0 2px 0 #fff8}
 
   /* Start card */
-  .card{background:#fff6;border:4px solid #ffd3e6;border-radius:14px;
-        padding:18px 22px;text-align:center;box-shadow:0 8px 0 #e6aac4;
-        backdrop-filter: blur(1px);}
+  .card{
+    background:#fff6;border:4px solid #ffd3e6;border-radius:14px;
+    padding:18px 22px;text-align:center;box-shadow:0 8px 0 #e6aac4;
+    backdrop-filter: blur(1px);
+  }
   .btn{cursor:pointer;margin-top:10px;padding:10px 18px;background:#fff;
        border:3px solid #ffc2da;border-radius:10px;box-shadow:0 4px 0 #e6aac4}
   .btn:active{transform:translateY(2px);box-shadow:0 2px 0 #e6aac4}
@@ -105,11 +111,13 @@
 <body>
   <div class="frame" id="frame">
     <canvas id="fx"></canvas>
+
+    <!-- visible curtains below UI -->
     <div class="curtain left"></div>
     <div class="curtain right"></div>
 
     <div class="content" id="screen">
-      <!-- START (visible first) -->
+      <!-- START -->
       <div class="panel" id="startPane">
         <div class="card">
           <h1>Welcome</h1>
@@ -158,14 +166,15 @@
   </div>
 
 <script>
-/* Helpers */
+/* Shorthand */
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 
+/* Typing helpers */
 function typeText(el, text, speed=22){
   return new Promise(res=>{
     el.textContent=''; let i=0;
-    const t=setInterval(()=>{ el.textContent+=text[i++]; if(i>=text.length){clearInterval(t);res();}},speed);
+    const t=setInterval(()=>{ el.textContent+=text[i++]||''; if(i>text.length){clearInterval(t);res();}},speed);
   });
 }
 function backspaceText(el, totalMs=3000){
@@ -191,7 +200,7 @@ function startFloat(el){
   loop();
 }
 
-/* Simple FX */
+/* FX */
 const Fx = (function(){
   const c=$('#fx'), ctx=c.getContext('2d'); let W=0,H=0,parts=[],raf;
   function resize(){ W=c.width=c.offsetWidth; H=c.height=c.offsetHeight; }
@@ -229,23 +238,23 @@ const dialogText=$('#dialogText');
 const floatCard=$('#floatCard');
 const floatImg=$('#floatImg');
 
-/* Curtains control */
+/* Curtains */
 function showCurtains(){ frame.classList.remove('open'); }
 function openCurtains(){ frame.classList.add('open'); }
 
-/* Flow */
+/* Flow state */
 let chosenPlayerSrc=null;
 let firstClicks={IUB:false, NSU:false, AIUB:false, BRAC:false};
 
+/* START -> PLAYER */
 $('#startBtn').addEventListener('click', async ()=>{
-  // open curtains & go to player select
-  openCurtains();
-  startPane.classList.add('hide');
+  openCurtains();                    // slide curtains
+  startPane.classList.add('hide');   // hide start
   playerPane.classList.remove('hide');
   await typeText(dialogText,"Pick your player.",20);
 });
 
-/* Player selection */
+/* PLAYER -> QUIZ */
 $$('.player').forEach(btn=>{
   btn.addEventListener('click', async ()=>{
     chosenPlayerSrc = btn.dataset.src;
@@ -255,7 +264,7 @@ $$('.player').forEach(btn=>{
   });
 });
 
-/* Question logic */
+/* QUIZ */
 const correctKey='IUB';
 $$('.option').forEach(btn=>{
   btn.addEventListener('click', async ()=>{
@@ -286,7 +295,7 @@ $$('.option').forEach(btn=>{
     Fx.burst(r.width-30,r.height-30,'#ffd400',130);
     Fx.confetti(r.width/2,r.height-40,80);
 
-    // Backspace after ~3s, then "I love you" after +2s
+    // After ~3s backspace, then +2s type "I love you"
     setTimeout(async ()=>{
       await backspaceText(dialogText,3000);
       setTimeout(()=>typeText(dialogText,"I love you",28),2000);
@@ -294,8 +303,8 @@ $$('.option').forEach(btn=>{
   });
 });
 
-/* Initial state: curtains closed, start visible */
-showCurtains();
+/* Initial state */
+showCurtains();                      // curtains closed
 window.addEventListener('load', ()=>window.dispatchEvent(new Event('resize')));
 </script>
 </body>
