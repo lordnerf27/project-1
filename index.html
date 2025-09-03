@@ -23,6 +23,8 @@
     --dialog-bg:#b68aa5d0;
     --dialog-border:#ffc3da;
     --dialog-fg:#ffffff;
+
+    --title-color:#000; /* can be themed */
   }
 
   body{
@@ -32,7 +34,7 @@
     display:grid;place-items:center;
     overflow:hidden;
   }
-  /* Single enlarged global bg; overscan to kill edge lines */
+  /* Global bg image (single, no seams) */
   body::before{
     content:"";
     position:fixed; inset:-6vmax;
@@ -40,7 +42,6 @@
     z-index:-1;
   }
 
-  /* Frame uses CSS vars so themes can swap smoothly */
   .frame{
     width:min(95vw,1200px);
     aspect-ratio:16/9;
@@ -51,35 +52,40 @@
     background:linear-gradient(to bottom,var(--frame-top),var(--frame-bot));
     transition:background .8s ease-in-out, box-shadow .8s ease-in-out, color .2s ease-in-out;
   }
-  /* Looping GIF overlay */
   .frame::after{
     content:""; position:absolute; inset:0;
     background:url('assets/frame-bg.gif') center/50% auto no-repeat;
     opacity:var(--gif-opacity); pointer-events:none;
   }
 
-  /* THEME: Player 1 (explicit, so you SEE it change) */
+  /* THEME: Player 1 (explicit so it *always* changes) */
   .theme-player1{
-    --frame-top:#ffdce8;
-    --frame-bot:#ffc2da;
-    --frame-border:#ffb3cf;
-    --gif-opacity:.20;
     --ink:#231f20;
-    --dialog-bg:#b68aa5d0;
-    --dialog-border:#ffb3cf;
+    --frame-top:#ffeaf4;         /* a touch lighter than base */
+    --frame-bot:#ffcade;         /* warmer pastel bottom */
+    --frame-border:#ff9fcf;      /* brighter inner border */
+    --gif-opacity:.22;
+    --dialog-bg:#c999b1d0;
+    --dialog-border:#ff9fcf;
     --dialog-fg:#ffffff;
+    --title-color:#4b2f3a;
   }
 
-  /* THEME: Player 2 (dim/dark) */
+  /* THEME: Player 2 (dim/dark + neon title) */
   .theme-player2{
     --ink:#f3f6fa;
     --frame-top:#2a0b0f;
     --frame-bot:#090406;
     --frame-border:#111;
-    --gif-opacity:.28;
+    --gif-opacity:.30;
     --dialog-bg:#141414c0;
     --dialog-border:#111;
     --dialog-fg:#ffffff;
+    --title-color:#b56bff; /* neon-ish purple */
+  }
+  .theme-player2 .top-title{
+    color:var(--title-color);
+    text-shadow:0 0 6px #b56bff, 0 0 10px #b56bff;
   }
   .theme-player2 .option{
     background:#000; color:#fff; border-color:#fff;
@@ -108,7 +114,7 @@
   .content{position:absolute; inset:0; display:grid; place-items:center; padding:20px; z-index:6}
   .panel{width:100%; max-width:960px; position:relative}
 
-  /* Gameboy-ish headings */
+  /* Headings */
   h1{font:700 36px 'Press Start 2P', monospace; letter-spacing:1px; margin:0 0 8px; text-shadow:0 2px 0 #fff8}
   h2{font:700 28px 'Press Start 2P', monospace; letter-spacing:1px; margin:0 0 8px; text-shadow:0 2px 0 #fff8}
   p{margin:0}
@@ -139,7 +145,7 @@
   /* Quiz */
   .top-title{
     position:absolute; left:0; right:0; top:18px; text-align:center;
-    font:700 26px 'Press Start 2P', monospace;
+    font:700 26px 'Press Start 2P', monospace; color:var(--title-color);
     transition: opacity .5s ease;
   }
   .grid{ margin-top:172px; display:grid; grid-template-columns:repeat(2,1fr); gap:16px; transition: opacity .5s ease }
@@ -160,7 +166,7 @@
   }
   .dialog img{width:36px;height:36px;object-fit:cover;border-radius:8px;border:2px solid var(--dialog-border)}
 
-  /* Floating image shows FULL pic (contain) */
+  /* Floating image shows FULL pic */
   .floatCard{
     position:absolute; left:50%; top:50%;
     width:320px; height:360px;
@@ -292,41 +298,57 @@ function startFloat(el){
   floatRAF=requestAnimationFrame(loop);
 }
 
-/* FX (bursts + confetti rain) */
+/* FX (bursts + confetti rain + sparks) */
 const Fx=(function(){
   const c=$('#fx'), ctx=c.getContext('2d');
   let W=0,H=0,parts=[],raf;
   function resize(){ W=c.width=c.offsetWidth; H=c.height=c.offsetHeight; }
   window.addEventListener('resize',resize); resize();
 
+  function push(p){ parts.push(p); if(!raf) loop(); }
+
   function burst(x,y,color='#ffec00',count=120){
     for(let i=0;i<count;i++){
       const a=Math.random()*Math.PI*2, v=1+Math.random()*3;
-      parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:60+Math.random()*40,age:0,color});
-    } if(!raf) loop();
+      push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:60+Math.random()*40,age:0,color,size:3,grav:0.03});
+    }
   }
-  function confettiRain(rows=6, perRow=30){
+  function confettiRain(rows=7, perRow=36){
     for(let r=0;r<rows;r++){
       const y = -10 - r*14;
       for(let i=0;i<perRow;i++){
         const x = (i+Math.random())/perRow * W;
         const v = 1.5 + Math.random()*1.5;
         const col = (i%3===0)?'#ff79a8':(i%3===1)?'#ffffff':'#ffd400';
-        parts.push({x,y,vx:(Math.random()-.5)*0.6,vy:v,life:120+Math.random()*40,age:0,color:col});
+        push({x,y,vx:(Math.random()-.5)*0.6,vy:v,life:120+Math.random()*40,age:0,color:col,size:3,grav:0.01});
       }
     }
-    if(!raf) loop();
   }
+  function sparksAround(x,y,count=80){
+    for(let i=0;i<count;i++){
+      const a=Math.random()*Math.PI*2, v=0.6+Math.random()*1.2;
+      const col = (i%2)?'#ffd400':'#ff79a8';
+      push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:40+Math.random()*20,age:0,color:col,size:2,grav:0.01});
+    }
+  }
+
   function loop(){
-    raf=requestAnimationFrame(loop); ctx.clearRect(0,0,W,H);
+    raf=requestAnimationFrame(loop);
+    ctx.clearRect(0,0,W,H);
     for(let i=parts.length-1;i>=0;i--){
-      const p=parts[i]; p.age++; p.x+=p.vx; p.y+=p.vy; p.vy+=0.01;
-      const a=1-p.age/p.life; if(a<=0){ parts.splice(i,1); continue; }
-      ctx.globalAlpha=Math.max(0,a); ctx.fillStyle=p.color; ctx.fillRect(p.x,p.y,3,3); ctx.globalAlpha=1;
+      const p=parts[i];
+      p.age++;
+      p.x+=p.vx; p.y+=p.vy; p.vy+=p.grav||0.02;
+      const a=1 - p.age/p.life;
+      if(a<=0){ parts.splice(i,1); continue; }
+      ctx.globalAlpha=Math.max(0,a);
+      ctx.fillStyle=p.color;
+      ctx.fillRect(p.x,p.y,p.size||3,p.size||3);
+      ctx.globalAlpha=1;
     }
     if(parts.length===0){ cancelAnimationFrame(raf); raf=0; }
   }
-  return {burst, confettiRain, resize};
+  return { burst, confettiRain, sparksAround, resize };
 })();
 
 /* ---------- App ---------- */
@@ -403,31 +425,41 @@ $$('.option').forEach(btn=>{
       return;
     }
 
-    /* SUCCESS: show floating image NOW, fade quiz UI, show top congrats, launch FX */
-    if(chosenPlayerSrc){
-      floatImg.src=chosenPlayerSrc;
-      floatCard.style.display='block';
-      startFloat(floatCard);
-    }
+    /* SUCCESS SEQUENCE */
+    // hide player badge immediately
+    badge.style.display='none';
 
-    // fade out options & title
+    // fade out quiz UI
     optionsGrid.classList.add('faded');
     titleTop.classList.add('faded');
 
     // top big title
     successTitle.style.display='block';
 
-    // fireworks at corners + rain confetti
-    const r=frame.getBoundingClientRect();
-    Fx.burst(30, r.height-30, '#ff79a8', 150);
-    Fx.burst(r.width-30, r.height-30, '#ffd400', 150);
-    Fx.confettiRain(7, 36); // nice rain
+    // center image now (full image)
+    if(chosenPlayerSrc){
+      floatImg.src=chosenPlayerSrc;
+      floatCard.style.display='block';
+      startFloat(floatCard);
+      // sparks around the card center
+      const r = floatCard.getBoundingClientRect();
+      const fr = frame.getBoundingClientRect();
+      const cx = r.left - fr.left + r.width/2;
+      const cy = r.top  - fr.top  + r.height/2;
+      Fx.sparksAround(cx, cy, 120);
+    }
+
+    // fireworks at corners + full-width confetti rain
+    const fr = frame.getBoundingClientRect();
+    Fx.burst(30, fr.height-30, '#ff79a8', 150);
+    Fx.burst(fr.width-30, fr.height-30, '#ffd400', 150);
+    Fx.confettiRain(8, 42); // rains from full top width
 
     // dialog line
     await Typewriter.type(dialogText,"Congratulations, this is the first step to your dreams.",18);
 
-    // (Optional) keep the later “I love you” if you still want it:
-    setTimeout(async()=>{
+    // Optional end message
+    setTimeout(async ()=>{
       await Typewriter.backspace(dialogText,3000);
       setTimeout(()=>Typewriter.type(dialogText,"I love you",26),2000);
     },3000);
